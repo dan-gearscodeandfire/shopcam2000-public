@@ -1,0 +1,928 @@
+/* SHOPCAM 2000 CONTROLLER
+ *
+ * Two themes, one layout.
+ *   cogitator - the branded HUD: near-black, red and brass, scanlines, glow.
+ *               Derived from the Little Timmy booth display so the two read as
+ *               the same machine.
+ *   clean     - white on black with red highlights, effects stripped, for
+ *               legibility at distance and for anyone who is not this channel.
+ *
+ * Fonts are SIL OFL (Cinzel) plus system monospace. Nothing licensed is shipped.
+ *
+ * ---------------------------------------------------------------------------
+ * THE SIZING MODEL - read this before changing any number below.
+ *
+ * Every dimension that decides legibility or reach is in `rem`, and the root
+ * font size is a function of the viewport. There is exactly one knob:
+ *
+ *     html { font-size: calc(var(--ui-base) * var(--ui-scale)); }
+ *
+ * `--ui-base` grows with the window, `--ui-scale` is the operator's override
+ * from Settings. Change one and the entire interface - type, buttons, cards,
+ * bars, gaps - resizes together and keeps its proportions. That is the whole
+ * trick, and it is why this file has almost no px left in it.
+ *
+ * What stays in px, deliberately:
+ *   - hairlines (1px borders) - a scaled hairline is a blurry hairline
+ *   - --radius - 3px reads as "machined" at every size; scaled it reads as soft
+ *
+ * Three targets this was measured against:
+ *   1080p fullscreen   1920x1080  -> base ~16.5px, 5 cards a row, nothing scrolls
+ *   shop phone         ~800x360   -> base 12px (floor), rail layout, all 10 visible
+ *   arbitrary window   anything   -> base tracks the window, so the layout is
+ *                                    always "as much as fits", never a fixed grid
+ *                                    with dead space or a scrollbar.
+ * --------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/static/fonts/cinzel-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/static/fonts/cinzel-700.woff2") format("woff2");
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+
+:root {
+  --display: "Cinzel", Georgia, "Times New Roman", serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", Consolas, monospace;
+
+  /* ---- the scale ---------------------------------------------------------
+   * Both axes, because either one alone gets a case wrong: vw alone makes a
+   * short wide window (a 1920x400 strip) draw an interface too tall to fit,
+   * and vh alone makes a tall narrow one draw type too big to sit side by
+   * side. Weighted toward height because height is what runs out first - the
+   * transport bar and the header are fixed furniture and everything else has
+   * to live between them.
+   *
+   * Floor 12px: below that the uppercase tracked labels stop resolving under
+   * shop light, and shrinking further would buy space by making the thing
+   * unreadable, which is not a trade this rig should make.
+   * Ceiling 20px: past that a 4K monitor gets a toy interface rather than more
+   * cameras, and more cameras is the point. */
+  --ui-base: clamp(12px, 0.42vw + 0.78vh, 20px);
+  --ui-scale: 1;              /* Settings > Interface scale, 0.75 - 1.5 */
+
+  --bg: #0a0000;
+  --bg-panel: rgba(30, 6, 6, 0.62);
+  --bg-panel-hi: rgba(52, 10, 10, 0.72);
+  --ink: rgba(255, 176, 158, 1);
+  --ink-dim: rgba(214, 122, 104, 0.78);
+  --ink-faint: rgba(168, 92, 78, 0.55);
+  --red: #ff2d2d;
+  --red-hot: #ff6a6a;
+  --brass: #c79a4a;
+  --brass-hot: #e8b86a;
+  --rule: #3a0a0a;
+  --ok: #46c07a;
+  --ok-hot: #5fd68f;
+  --warn: #e0a52e;
+  /* The encoder switch, and only that. Three switches sit on a camera card and
+   * two of them are already brass (armed) and green (watch); a third warm tone
+   * would be a coin toss under shop light. Cool steel reads as "the machine
+   * underneath" rather than "another mode", which is exactly what it is. */
+  --power: #6fb2c9;
+  --power-hot: #8fcfe4;
+
+  --glow-red: 0 0 0.9rem rgba(255, 45, 45, 0.38);
+  --text-shadow: 0 0 2px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.9);
+
+  --radius: 3px;
+  --bar-h: 3.6rem;
+  --transport-h: 6.5rem;
+  --gutter: 1rem;
+  --rail-w: 0rem;             /* only non-zero in the landscape-rail layout */
+  /* How wide a camera card wants to be. Both axes again, and for the same
+   * reason the root size uses both: a card is as tall as it is wide, so height
+   * is what decides whether another row of them fits. Width alone left a 1080p
+   * monitor with five columns, two rows and 500px of dead desk at the bottom;
+   * feeding height in spends that on bigger thumbnails instead. */
+  --card-min: clamp(13rem, 12vw + 9vh, 24rem);
+
+  --fx-opacity: 1;
+  --panel-blur: 2px;
+  /* The bars are near-opaque and blur their own backdrop, so each one that
+   * wants scanlines carries its own copy rather than sharing the page layer. */
+  --scanlines: repeating-linear-gradient(0deg,
+    rgba(0,0,0,0) 0 2px, rgba(78,16,16,0.30) 2px 4px);
+  /* Wider than the 4px line period, so it averages to a flat tint. Anything
+   * that must cover the lines rather than sit behind them uses this. */
+  --scanline-cover: blur(6px);
+
+  color-scheme: dark;
+}
+
+/* ---- clean theme: same bones, no theatre ------------------------------- */
+:root[data-theme="clean"] {
+  --bg: #000000;
+  --bg-panel: #111111;
+  --bg-panel-hi: #1b1b1b;
+  --ink: #ffffff;
+  --ink-dim: rgba(255, 255, 255, 0.66);
+  --ink-faint: rgba(255, 255, 255, 0.38);
+  --red: #e11d1d;
+  --red-hot: #ff4040;
+  --brass: #ffffff;
+  --brass-hot: #ffffff;
+  --rule: #2a2a2a;
+  --glow-red: none;
+  --text-shadow: none;
+  --fx-opacity: 0;
+  --panel-blur: 0px;
+}
+
+html {
+  font-size: calc(var(--ui-base) * var(--ui-scale));
+}
+html, body { min-height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.94rem;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: calc(var(--transport-h) + env(safe-area-inset-bottom));
+  overflow-x: hidden;
+}
+
+:root[data-theme="cogitator"] body {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 0%, #1c0505 0%, transparent 70%),
+    linear-gradient(180deg, #0d0101 0%, #060000 100%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+/* ---- scanlines ----------------------------------------------------------- *
+ * A background layer, not an overlay. They used to be inside `.fx` at z-index
+ * 90, which ruled them across the text and the buttons - the two things you
+ * have to read under shop light. Here they paint above the body gradient and
+ * below every piece of in-flow content, so they show in the empty field and
+ * anything with a surface occludes them.
+ *
+ * That occlusion is only as good as the surface is opaque, and this theme is
+ * built on translucent panels, so the pieces that sit on bare background carry
+ * their own backing below. */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  opacity: var(--fx-opacity);
+  background: var(--scanlines);
+}
+
+/* ---- full-screen effects ------------------------------------------------ */
+.fx {
+  position: fixed; inset: 0; pointer-events: none; z-index: 90;
+  opacity: var(--fx-opacity);
+}
+.fx::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(130% 105% at 50% 45%, transparent 62%, rgba(0,0,0,0.62) 100%);
+}
+/* T-800 corner brackets, a direct lift from the Timmy booth */
+.fx::before {
+  content: ''; position: fixed;
+  top: calc(0.6rem + env(safe-area-inset-top));
+  left: calc(0.6rem + env(safe-area-inset-left));
+  width: 1.6rem; height: 1.6rem;
+  border: 2px solid var(--red); border-right: 0; border-bottom: 0;
+  filter: drop-shadow(0 0 5px rgba(255,45,45,0.5));
+}
+:root[data-theme="clean"] .fx { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+  body::before, .bar::before, .transport::before { display: none; }
+}
+
+/* ---- header ------------------------------------------------------------- */
+.bar {
+  position: sticky; top: 0; z-index: 60;
+  height: var(--bar-h);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.75rem;
+  padding-left: calc(var(--gutter) + env(safe-area-inset-left));
+  padding-right: calc(var(--gutter) + env(safe-area-inset-right));
+  border-bottom: 1px solid var(--rule);
+  background: linear-gradient(180deg, rgba(10,0,0,0.96), rgba(10,0,0,0.82));
+  /* Frosts the page scrolling under the sticky header - not a scanline cover,
+   * so it does not follow `--scanline-cover` even though the value matches. */
+  backdrop-filter: blur(6px);
+}
+/* Same story as the transport bar: it blurs its own backdrop, so it carries its
+ * own lines. The wordmark and subtitle read through them; the status pill and
+ * the settings button cover them. */
+.bar::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  opacity: var(--fx-opacity);
+  background: var(--scanlines);
+}
+.bar-left, .bar-right { position: relative; z-index: 1; }
+
+.bar-left { display: flex; align-items: baseline; gap: 0.75rem; min-width: 0; }
+
+.wordmark {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-shadow: var(--text-shadow), 0 0 12px rgba(255,45,45,0.22);
+  white-space: nowrap;
+}
+.wordmark span { color: var(--red); }
+:root[data-theme="clean"] .wordmark { color: #fff; }
+
+.subtitle {
+  font-size: 0.62rem; letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--ink-faint); white-space: nowrap;
+}
+@media (max-width: 640px) { .subtitle { display: none; } }
+
+.bar-right { display: flex; align-items: center; gap: 0.6rem; }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--rule); border-radius: 999px;
+  backdrop-filter: var(--scanline-cover);
+  font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink-dim); white-space: nowrap;
+}
+.pill .dot {
+  width: 0.5rem; height: 0.5rem; border-radius: 50%;
+  background: var(--ink-faint); flex: none;
+}
+.pill--online { color: var(--ink); border-color: rgba(70,192,122,0.4); }
+.pill--online .dot { background: var(--ok); box-shadow: 0 0 0.5rem rgba(70,192,122,0.7); }
+.pill--offline { color: var(--red-hot); border-color: rgba(255,45,45,0.5); }
+.pill--offline .dot { background: var(--red); box-shadow: var(--glow-red); animation: blink 1.4s steps(2) infinite; }
+@keyframes blink { 50% { opacity: 0.25; } }
+
+/* ---- storage ring -------------------------------------------------------- *
+ * Was a full-width bar and a two-line caption at the foot of the page. It is
+ * now 25px in the header, because the honest version of that information is
+ * one number ("how much room is left") and one shape ("is that a lot"). See
+ * renderDisk() in app.js for why the ring tracks the volume rather than Blue
+ * Iris's clip allocation. */
+.disk { display: inline-flex; align-items: center; gap: 0.45rem; cursor: help; }
+.disk-ring { width: 1.6rem; height: 1.6rem; flex: none; transform: rotate(-90deg); }
+.disk-ring circle { fill: none; stroke-width: 4.5; }
+.disk-ring-track { stroke: rgba(255,255,255,0.13); }
+.disk-ring-arc {
+  stroke: var(--brass); stroke-linecap: butt;
+  transition: stroke-dasharray .5s ease, stroke .3s;
+}
+.disk-ring-arc.is-high { stroke: var(--warn); }
+.disk-ring-arc.is-critical { stroke: var(--red); }
+.disk-text {
+  font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-dim); white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+/* The ring survives everywhere; the number is the first thing to go when the
+ * bar runs out of room, because the colour already answers "is it fine". */
+@media (max-width: 700px) { .disk-text { display: none; } }
+
+.icon-btn {
+  display: grid; place-items: center;
+  width: 2.25rem; height: 2.25rem;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: transparent; backdrop-filter: var(--scanline-cover);
+  color: var(--ink-dim);
+  cursor: pointer; transition: color .15s, border-color .15s;
+  flex: none;
+}
+.icon-btn svg { width: 1.25rem; height: 1.25rem; }
+.icon-btn:hover, .icon-btn:focus-visible { color: var(--brass-hot); border-color: var(--brass); }
+
+/* ---- layout ------------------------------------------------------------- *
+ * No max-width. It used to be capped at 1180px, which on a 1080p monitor left
+ * 740px of empty desk on either side and pushed the tenth camera below the
+ * fold - the exact opposite of what a dedicated screen is for. The card grid
+ * below decides how wide a card should be; the page just gives it everything. */
+main {
+  padding: 1.1rem calc(var(--gutter) + env(safe-area-inset-right))
+           1.5rem calc(var(--gutter) + env(safe-area-inset-left));
+}
+
+.section-title {
+  font-family: var(--display); font-weight: 700;
+  font-size: 0.75rem; letter-spacing: 0.26em; text-transform: uppercase;
+  color: var(--brass); text-shadow: var(--text-shadow);
+}
+:root[data-theme="clean"] .section-title { color: rgba(255,255,255,0.8); }
+
+.cameras-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem;
+}
+.cameras-actions { display: flex; align-items: center; gap: 0.5rem; }
+.summary {
+  font-size: 0.69rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint); margin-right: 0.25rem;
+}
+
+/* These sit on bare background, so the scanlines would otherwise rule straight
+ * through them. A backdrop blur wider than the 4px line period averages it to a
+ * flat tint, which is how the header and transport bar already stay clean - and
+ * unlike an opaque fill it keeps matching the gradient underneath. */
+.ghost-btn {
+  padding: 0.4rem 0.75rem; border: 1px solid var(--rule); border-radius: var(--radius);
+  background: transparent; color: var(--ink-dim);
+  backdrop-filter: var(--scanline-cover);
+  font-family: inherit; font-size: 0.69rem; letter-spacing: 0.16em;
+  text-transform: uppercase; cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.ghost-btn:hover:not(:disabled), .ghost-btn:focus-visible:not(:disabled) {
+  color: var(--brass-hot); border-color: var(--brass); background: rgba(199,154,74,0.08);
+}
+.ghost-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ---- alert -------------------------------------------------------------- */
+.alert {
+  margin-bottom: 1rem; padding: 0.75rem 0.9rem;
+  border: 1px solid var(--red); border-left-width: 3px; border-radius: var(--radius);
+  background: rgba(255,45,45,0.09);
+  color: var(--red-hot); font-size: 0.82rem;
+}
+.alert.alert--warn { border-color: var(--warn); background: rgba(224,165,46,0.09); color: var(--warn); }
+.alert.alert--ok { border-color: var(--ok); background: rgba(70,192,122,0.09); color: var(--ok-hot); }
+/* The cameras a TWAB press did and did not save, listed rather than summarised -
+   "1 failed" is not enough to act on when you are deciding whether to reshoot. */
+.alert ul { margin: 0.4rem 0 0; padding-left: 1.1rem; }
+.alert li { margin-top: 0.12rem; }
+
+/* ---- camera grid -------------------------------------------------------- */
+.cameras {
+  display: grid; gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+}
+@media (max-width: 560px) { .cameras { grid-template-columns: 1fr; } }
+
+.cam {
+  position: relative;
+  display: flex; flex-direction: column;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--bg-panel);
+  overflow: hidden;
+  transition: border-color .18s, box-shadow .18s, background .18s;
+}
+:root[data-theme="cogitator"] .cam { backdrop-filter: blur(var(--panel-blur)); }
+
+.cam--armed { border-color: var(--brass); background: var(--bg-panel-hi); }
+:root[data-theme="cogitator"] .cam--armed { box-shadow: 0 0 0 1px rgba(199,154,74,0.18), 0 0 18px rgba(199,154,74,0.10); }
+.cam--recording { border-color: var(--red); }
+:root[data-theme="cogitator"] .cam--recording { box-shadow: 0 0 0 1px rgba(255,45,45,0.28), 0 0 22px rgba(255,45,45,0.20); }
+.cam--down { opacity: 0.62; }
+
+.cam-thumb {
+  position: relative; aspect-ratio: 16 / 9;
+  background: #050000 center/cover no-repeat;
+  border-bottom: 1px solid var(--rule);
+  display: grid; place-items: center;
+}
+.cam-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cam-thumb .no-thumb {
+  font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.cam-thumb::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, transparent 55%, rgba(0,0,0,0.55) 100%);
+}
+:root[data-theme="clean"] .cam-thumb::after { display: none; }
+
+.cam-tally {
+  position: absolute; top: 0.5rem; left: 0.5rem; z-index: 2;
+  display: inline-flex; align-items: center; gap: 0.38rem;
+  padding: 0.18rem 0.5rem; border-radius: 2px;
+  background: rgba(0,0,0,0.72);
+  font-size: 0.56rem; letter-spacing: 0.2em; text-transform: uppercase;
+  white-space: nowrap;
+}
+.cam-tally .dot { width: 0.44rem; height: 0.44rem; border-radius: 50%; }
+.cam-tally--rec { color: var(--red-hot); }
+.cam-tally--rec .dot { background: var(--red); box-shadow: var(--glow-red); animation: pulse 1.1s ease-in-out infinite; }
+.cam-tally--armed { color: var(--brass-hot); }
+.cam-tally--armed .dot { background: var(--brass); }
+/* overwatch badge sits in the opposite corner so it can coexist with REC/Armed */
+.cam-tally--ow { left: auto; right: 0.5rem; color: var(--ok); }
+.cam-tally--ow .dot { background: var(--ok); }
+/* A microphone, not a camera. Bottom-left so it never collides with the tally
+ * pair above, and always present rather than state-dependent: what this source
+ * IS does not change, and the whole reason the badge exists is that the card
+ * otherwise claims to be a picture. */
+.cam-tally--audio {
+  top: auto; bottom: 0.5rem; left: 0.5rem;
+  color: var(--power-hot); letter-spacing: 0.22em;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.cam-body {
+  display: flex; flex-direction: column; justify-content: center;
+  gap: 0.15rem; padding: 0.6rem 0.75rem; min-width: 0;
+}
+.cam-name {
+  font-family: var(--display); font-weight: 700;
+  font-size: 0.88rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink); text-shadow: var(--text-shadow);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+:root[data-theme="clean"] .cam-name { color: #fff; }
+.cam-state {
+  display: flex; align-items: center; gap: 0.38rem;
+  font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cam-state .dot { width: 0.38rem; height: 0.38rem; border-radius: 50%; flex: none; }
+.dot--ok { background: var(--ok); }
+.dot--warn { background: var(--warn); }
+.dot--err { background: var(--red); }
+.dot--off { background: var(--ink-faint); }
+.cam-fail { color: var(--red-hot); font-weight: 700; }
+
+/* ---- the control strip -------------------------------------------------- *
+ * Three switches used to sit stacked in the corner of each card, 62x32 each,
+ * and each one changed its own LABEL to show its state - "Armed" or "Off",
+ * "Watch" or "Off", "Enc" or "Off". Two things were wrong with that.
+ *
+ * 1. You had to READ a card to know its state. Three words per card, ten
+ *    cards, under shop light, usually while looking at something else. The
+ *    label is the one thing on a control that should never move, because it is
+ *    what you aim at; the state is what should change.
+ * 2. It cost ~108px of fixed height per card no matter how big the screen was,
+ *    which is the single worst shape for an interface that has to survive from
+ *    a 360px-tall phone to a 1080p monitor.
+ *
+ * So: one strip across the foot of the card, three equal segments, each with a
+ * FIXED word and an indicator that lights. State is now colour and glow, read
+ * at a glance and from across the shop; the word only tells you what you are
+ * about to press. The segments are equal fractions rather than fixed widths,
+ * so the strip is exactly as big as the card is and the touch target grows
+ * with the screen instead of staying phone-sized on a monitor.
+ *
+ * Colours are unchanged and load-bearing: brass = armed, green = watch (the
+ * same green as the That Was Awesome button, so "what will that button save"
+ * is answerable by looking for one colour), cool steel = the encoder, because
+ * it is the machine underneath rather than another mode.
+ *
+ * Every card gets three slots even when a camera has no encoder here, so the
+ * ENC column stays a column. A ragged strip cannot be scanned. */
+.cam-controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;                       /* the rule shows through, so it reads as a block of keys */
+  margin-top: auto;               /* pin to the foot however tall the body is */
+  background: var(--rule);
+  border-top: 1px solid var(--rule);
+}
+
+.seg {
+  position: relative;
+  min-height: 2.6rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.28rem;
+  border: 0; border-radius: 0;
+  background: rgba(0,0,0,0.38);
+  color: var(--ink-faint);
+  font-family: inherit;
+  font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none; user-select: none;
+  transition: background .16s, color .16s;
+}
+/* the indicator. A bar rather than a dot: at 12px root a dot is 4px of colour
+ * and disappears, a bar keeps its identity all the way down. */
+.seg::before {
+  content: ''; flex: none;
+  width: 1.5rem; height: 0.2rem; border-radius: 1px;
+  background: var(--ink-faint); opacity: 0.4;
+  transition: background .16s, opacity .16s, box-shadow .16s;
+}
+.seg:hover:not(:disabled):not(.seg--fixed):not(.seg--none) { background: rgba(255,255,255,0.05); }
+.seg:focus-visible { outline: 2px solid currentColor; outline-offset: -3px; }
+.seg:disabled { opacity: 0.38; cursor: not-allowed; }
+
+.seg[aria-pressed="true"], .seg--fixed {
+  background: var(--seg-bg);
+  color: var(--seg-ink);
+}
+.seg[aria-pressed="true"]::before, .seg--fixed::before {
+  background: var(--seg-on); opacity: 1;
+  box-shadow: 0 0 0.5rem var(--seg-on);
+}
+:root[data-theme="clean"] .seg[aria-pressed="true"]::before,
+:root[data-theme="clean"] .seg--fixed::before { box-shadow: none; }
+
+.seg--rec { --seg-on: var(--brass); --seg-bg: rgba(199,154,74,0.16); --seg-ink: var(--brass-hot); }
+.seg--ow  { --seg-on: var(--ok);    --seg-bg: rgba(70,192,122,0.16);  --seg-ink: var(--ok-hot); }
+.seg--enc { --seg-on: var(--power); --seg-bg: rgba(111,178,201,0.16); --seg-ink: var(--power-hot); }
+
+/* MIC1. Its encoder is deliberately always on and has no switch, so the slot
+ * is filled by a plate rather than left empty - an empty slot would read as
+ * "off", which is the one thing it must never say. */
+.seg--fixed { cursor: default; }
+
+/* A camera that reaches Blue Iris directly. There is no encoder on this
+ * machine to switch, so the slot holds the column and says nothing else. */
+.seg--none {
+  cursor: default; background: rgba(0,0,0,0.22); color: var(--ink-faint); opacity: 0.5;
+}
+.seg--none::before { visibility: hidden; }
+
+/* card accent when only overwatch (armed/recording borders take precedence) */
+.cam--overwatch:not(.cam--armed):not(.cam--recording) {
+  border-color: rgba(70,192,122,0.55);
+}
+
+/* An encoder that is off is not a fault, so the card must not read as one - but
+ * it IS the reason this camera is dark, so the card says so rather than sitting
+ * at the same dimmed opacity as a camera that genuinely fell over. */
+.cam--encoff { opacity: 0.8; border-style: dashed; }
+.cam--encoff .cam-thumb { background-image: none; }
+
+/* ---- encoders ------------------------------------------------------------ *
+ * The per-encoder switch is the ENC segment, up on the camera card with ARM
+ * and WATCH. It was a separate list once, and a list is the wrong shape for
+ * this: to switch off CAM5 you had to leave CAM5, find the row that says CAM5
+ * and trust the label. Every control for a camera belongs on that camera.
+ *
+ * What is left here is only what is genuinely fleet-wide: the count, the two
+ * bulk buttons, and what off costs. */
+.bridges { margin-top: 1.4rem; }
+.bridges .cameras-head { margin-bottom: 0; }
+
+/* ---- clips -------------------------------------------------------------- */
+.clips { margin-top: 1.6rem; }
+.clip-list { display: grid; gap: 0.62rem; margin-top: 0.75rem; }
+.clip {
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: var(--bg-panel); padding: 0.75rem;
+}
+.clip-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 0.62rem; flex-wrap: wrap; margin-bottom: 0.5rem;
+}
+.clip-name {
+  font-size: 0.75rem; letter-spacing: 0.06em; color: var(--ink);
+  word-break: break-all;
+}
+.clip-meta { font-size: 0.69rem; color: var(--ink-faint); white-space: nowrap; }
+.clip video { width: 100%; max-height: 46vh; background: #000; border-radius: 2px; display: block; }
+.clip-fallback {
+  padding: 0.62rem; border: 1px dashed var(--warn); border-radius: 2px;
+  color: var(--warn); font-size: 0.75rem;
+}
+.clip-fallback a { color: var(--brass-hot); }
+
+.clip-note {
+  margin: 0 0 0.56rem; padding: 0.5rem 0.62rem;
+  border-left: 2px solid var(--warn);
+  background: rgba(224,165,46,0.08);
+  color: var(--warn); font-size: 0.75rem; line-height: 1.5;
+}
+
+.empty { padding: 1.75rem 0; text-align: center; color: var(--ink-faint); font-size: 0.82rem; }
+
+/* ---- transport ---------------------------------------------------------- */
+.transport {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
+  border-top: 1px solid var(--rule);
+  background: linear-gradient(180deg, rgba(10,0,0,0.90), rgba(10,0,0,0.99));
+  backdrop-filter: blur(8px);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+/* Painted above the bar's own background and below `.transport-inner`, so the
+ * timer reads through it and the two buttons cover it. */
+.transport::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  opacity: var(--fx-opacity);
+  background: var(--scanlines);
+}
+.transport-inner {
+  position: relative; z-index: 1;
+  height: var(--transport-h);
+  display: flex; align-items: center; gap: 1rem;
+  padding-left: calc(var(--gutter) + env(safe-area-inset-left));
+  padding-right: calc(var(--gutter) + env(safe-area-inset-right));
+}
+.transport-meta { flex: 1; min-width: 0; }
+.timer {
+  font-family: var(--mono); font-size: 2.5rem;
+  font-variant-numeric: tabular-nums; line-height: 1;
+  letter-spacing: 0.04em; color: var(--ink-faint);
+  transition: color .2s;
+}
+.timer.is-live { color: var(--red-hot); text-shadow: var(--glow-red); }
+.transport-status {
+  margin-top: 0.38rem; font-size: 0.69rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.transport-actions { display: flex; align-items: stretch; gap: 0.62rem; flex: none; }
+
+.record {
+  position: relative; flex: none;
+  width: 11rem; height: 4.25rem;
+  border: 2px solid var(--red); border-radius: var(--radius);
+  background: rgba(255,45,45,0.10);
+  /* 10% alpha would let the bar's scanlines straight through the face. */
+  backdrop-filter: var(--scanline-cover);
+  color: var(--red-hot);
+  cursor: pointer; overflow: hidden;
+  font-family: inherit;
+  /* stops iOS Safari raising its selection/callout menu on a long press */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none; user-select: none;
+  transition: background .2s, border-color .2s, color .2s, opacity .2s;
+}
+.record:disabled { opacity: 0.4; cursor: not-allowed; }
+.record:focus-visible { outline: 3px solid var(--red-hot); outline-offset: 3px; }
+
+.record-face {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.2rem; height: 100%;
+}
+.record-glyph {
+  width: 1rem; height: 1rem; border-radius: 50%;
+  background: currentColor; flex: none;
+}
+.record-label {
+  font-family: var(--display); font-weight: 700;
+  font-size: 0.82rem; letter-spacing: 0.22em; text-transform: uppercase;
+}
+.record-hint {
+  font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint); min-height: 0.7rem;
+}
+
+.record-fill {
+  position: absolute; inset: 0; z-index: 1;
+  background: var(--red); opacity: 0.85;
+  transform: scaleX(0); transform-origin: left center;
+}
+
+.record[data-state="recording"] {
+  background: rgba(255,45,45,0.20); color: #fff;
+  border-color: var(--red-hot);
+  animation: rec-breathe 2.2s ease-in-out infinite;
+}
+:root[data-theme="clean"] .record[data-state="recording"] { animation: none; }
+@keyframes rec-breathe {
+  0%, 100% { box-shadow: 0 0 0 rgba(255,45,45,0); }
+  50% { box-shadow: 0 0 26px rgba(255,45,45,0.45); }
+}
+.record[data-state="recording"] .record-glyph { border-radius: 1px; }
+.record[data-state="partial"] { border-color: var(--warn); color: var(--warn); }
+
+/* ---- That Was Awesome --------------------------------------------------- *
+ * Green, not red, and deliberately not shaped like Record: the two buttons do
+ * opposite things and must never be confused in a hurry. Red starts something
+ * you decided on in advance; green rescues something that already happened.
+ * The colour matches the per-camera WATCH segment, so "which cameras will this
+ * save" is answerable by looking for the same green up the page.
+ */
+.twab {
+  position: relative; flex: none;
+  width: 10rem; height: 4.25rem;
+  border: 2px solid var(--ok); border-radius: var(--radius);
+  background: rgba(70,192,122,0.10);
+  backdrop-filter: var(--scanline-cover);
+  color: var(--ok-hot);
+  cursor: pointer; overflow: hidden;
+  font-family: inherit;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none; user-select: none;
+  transition: background .2s, border-color .2s, color .2s, opacity .2s;
+}
+.twab:disabled { opacity: 0.35; cursor: not-allowed; }
+.twab:focus-visible { outline: 3px solid var(--ok-hot); outline-offset: 3px; }
+.twab-face {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.25rem; height: 100%; padding: 0 0.5rem;
+}
+.twab-label {
+  font-family: var(--display); font-weight: 700;
+  font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase;
+  line-height: 1.2; text-align: center;
+}
+.twab-hint {
+  font-size: 0.56rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint); min-height: 0.7rem; text-align: center;
+}
+/* Saving and saved are held long enough to read from across the shop - the
+   press happens while you are looking at the thing that was awesome, not at
+   the phone, so the confirmation has to still be there when you look down. */
+.twab[data-state="busy"] { background: rgba(70,192,122,0.20); }
+.twab[data-state="saved"] {
+  background: var(--ok); color: #04170c; border-color: var(--ok-hot);
+}
+.twab[data-state="saved"] .twab-hint { color: rgba(4,23,12,0.72); }
+.twab[data-state="partial"] { border-color: var(--warn); color: var(--warn); }
+.twab[data-state="failed"] { border-color: var(--red); color: var(--red-hot); }
+
+/* ---- settings sheet ----------------------------------------------------- */
+.sheet {
+  position: fixed; inset: 0; z-index: 100;
+  display: grid; place-items: center;
+  padding: var(--gutter);
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(3px);
+  overflow-y: auto;
+}
+.sheet[hidden] { display: none; }
+.sheet-panel {
+  width: min(34rem, 100%);
+  max-height: calc(100vh - 2 * var(--gutter));
+  overflow-y: auto;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: #0d0202; padding: 1.1rem;
+}
+:root[data-theme="clean"] .sheet-panel { background: #0a0a0a; }
+.sheet-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.75rem; margin-bottom: 0.38rem;
+}
+.row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; padding: 0.85rem 0; border-bottom: 1px solid var(--rule);
+}
+.row-label { font-size: 0.82rem; color: var(--ink); }
+.row-label em {
+  display: block; margin-top: 0.2rem; font-style: normal;
+  font-size: 0.69rem; color: var(--ink-faint); line-height: 1.4;
+}
+.select, .number {
+  flex: none; min-width: 6.75rem;
+  padding: 0.5rem 0.62rem;
+  border: 1px solid var(--rule); border-radius: var(--radius);
+  background: #000; color: var(--ink);
+  font-family: inherit; font-size: 0.82rem;
+}
+.switch {
+  flex: none; width: 2.9rem; height: 1.62rem;
+  appearance: none; -webkit-appearance: none;
+  border: 1px solid var(--rule); border-radius: 2px;
+  background: rgba(0,0,0,0.6); position: relative; cursor: pointer;
+  transition: border-color .16s, background .16s;
+}
+.switch::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: calc(1.62rem - 6px); height: calc(1.62rem - 6px); border-radius: 1px;
+  background: #3a3a3a; transition: transform .16s, background .16s;
+}
+.switch:checked { border-color: var(--brass); background: rgba(199,154,74,0.16); }
+.switch:checked::after { transform: translateX(1.24rem); background: var(--brass-hot); }
+.switch:focus-visible { outline: 2px solid var(--brass-hot); outline-offset: 2px; }
+
+.sheet-foot { padding-top: 0.85rem; }
+.about { font-size: 0.69rem; color: var(--ink-faint); line-height: 1.6; }
+.about code { font-size: 0.69rem; color: var(--ink-dim); }
+
+/* ==========================================================================
+ * LAYOUT 2 - NARROW PORTRAIT (phone held upright)
+ * Timer plus two buttons does not fit across a 375px phone, and the one
+ * failure mode that matters here is hitting Record when you meant TWAB. So the
+ * readout moves above the buttons and each button takes half the width -
+ * bigger targets, not smaller ones.
+ * ========================================================================== */
+@media (max-width: 560px) and (orientation: portrait) {
+  :root { --transport-h: 9.5rem; }
+  .transport-inner {
+    flex-direction: column; align-items: stretch; justify-content: center;
+    gap: 0.62rem;
+  }
+  .transport-meta { flex: none; display: flex; align-items: baseline; gap: 0.75rem; }
+  .timer { font-size: 1.9rem; }
+  .transport-status { margin-top: 0; }
+  .transport-actions { display: flex; gap: 0.62rem; }
+  .twab, .record { flex: 1 1 0; width: auto; min-width: 0; }
+}
+
+/* ==========================================================================
+ * LAYOUT 3 - LANDSCAPE RAIL (the shop phone: ~1600x720 physical, ~800x360 CSS)
+ *
+ * A short wide screen is the one case where the default layout falls apart: a
+ * full-width transport bar across the bottom spends a fifth of the height on
+ * two buttons and a clock, and then the cameras get a letterbox to scroll in.
+ *
+ * So the transport becomes a RIGHT-HAND RAIL. It costs width, which a
+ * landscape screen has, instead of height, which it does not - and the two
+ * buttons get taller than they have ever been because they now fill the rail
+ * top to bottom. The cameras get the remaining ~640x320, and because the cards
+ * turn on their side there (thumb | name | controls) all ten fit in two
+ * columns of five with nothing scrolling.
+ *
+ * Keyed on height rather than width: a 1600x720 phone and a 1920x400 browser
+ * strip have the same problem, and it is not a phone problem.
+ * ========================================================================== */
+@media (max-height: 560px) and (orientation: landscape) {
+  :root {
+    --bar-h: 2.6rem;
+    --rail-w: 11.5rem;
+    --card-min: 19rem;
+    --gutter: 0.62rem;
+  }
+
+  body { padding-bottom: 0; }
+
+  main {
+    padding-top: 0.62rem;
+    padding-bottom: 0.62rem;
+    padding-right: calc(var(--rail-w) + var(--gutter) + env(safe-area-inset-right));
+  }
+
+  /* The bar stops being sticky-over-content and becomes a lid, so the rail can
+   * start beneath it and own the full remaining height. */
+  .bar { position: fixed; top: 0; left: 0; right: 0; }
+  body { padding-top: var(--bar-h); }
+
+  .transport {
+    top: var(--bar-h); bottom: 0; left: auto; right: 0;
+    width: calc(var(--rail-w) + env(safe-area-inset-right));
+    border-top: 0; border-left: 1px solid var(--rule);
+    background: linear-gradient(90deg, rgba(10,0,0,0.90), rgba(10,0,0,0.99));
+    padding-bottom: 0;
+  }
+  .transport-inner {
+    height: 100%;
+    flex-direction: column; align-items: stretch; justify-content: stretch;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    padding-right: calc(0.5rem + env(safe-area-inset-right));
+  }
+  .transport-meta {
+    flex: none; text-align: center;
+    padding-bottom: 0.35rem; border-bottom: 1px solid var(--rule);
+  }
+  .timer { font-size: 1.7rem; }
+  .transport-status { margin-top: 0.15rem; font-size: 0.56rem; white-space: normal; }
+
+  /* The buttons fill whatever is left, which on a 360px-tall screen is about
+   * 120px each - by a distance the biggest targets in the whole interface, on
+   * the one device that gets used with dirty hands and without looking. */
+  .transport-actions { flex: 1; flex-direction: column; gap: 0.5rem; min-height: 0; }
+  .twab, .record { flex: 1 1 0; width: 100%; height: auto; min-height: 2.6rem; }
+  .twab-label { font-size: 0.7rem; }
+
+  /* ---- cards on their side ---- */
+  .cam { flex-direction: row; align-items: stretch; }
+  .cam-thumb {
+    flex: none; width: 5.4rem; aspect-ratio: 16 / 9; height: auto;
+    border-bottom: 0; border-right: 1px solid var(--rule);
+  }
+  .cam-tally { font-size: 0.5rem; padding: 0.1rem 0.3rem; letter-spacing: 0.12em; gap: 0.25rem; }
+  .cam-tally--audio { letter-spacing: 0.12em; }
+  .cam-body { flex: 1 1 auto; padding: 0.35rem 0.5rem; }
+  .cam-name { font-size: 0.78rem; letter-spacing: 0.1em; }
+  /* Wider than they need to be for the text. This is the one screen that gets
+   * used with dirty hands and without looking down first, and the row has
+   * width to spare — the name field is the only thing that loses any. */
+  .cam-controls {
+    flex: none; margin-top: 0;
+    grid-template-columns: repeat(3, 3.4rem);
+    border-top: 0; border-left: 1px solid var(--rule);
+  }
+  .seg { min-height: 0; font-size: 0.54rem; letter-spacing: 0.08em; gap: 0.2rem; }
+  .seg::before { width: 1.1rem; height: 0.18rem; }
+
+  .cameras { gap: 0.5rem; }
+  .cameras-head { margin-bottom: 0.5rem; }
+  .bridges, .clips { margin-top: 0.9rem; }
+  /* No room for a second header row on a 360px-tall screen, and the encoder
+     state is already on every card. The bulk pair lives in Settings-free reach
+     via the cards themselves; the section header is what goes. */
+  .bridges .section-title { display: none; }
+  .sheet-panel { max-height: calc(100vh - 1rem); }
+}
+
+/* Very short landscape (a 1600x720 phone in a browser with chrome showing, or
+ * a deliberately squashed window). Drop the thumbnail to a colour chip: at
+ * this height a 16:9 image is 20px tall and tells you nothing, and the name is
+ * what identifies a camera anyway. */
+@media (max-height: 400px) and (orientation: landscape) {
+  .cam-thumb { width: 2.6rem; }
+  .cam-thumb .no-thumb { font-size: 0.45rem; letter-spacing: 0.05em; }
+  .cam-tally { display: none; }
+  .cam-controls { grid-template-columns: repeat(3, 3.2rem); }
+}

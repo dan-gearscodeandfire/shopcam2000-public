@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en" data-theme="cogitator">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SHOPCAM 2000</title>
+<meta name="theme-color" content="#0a0000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Shopcam">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/static/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/static/icons/icon-180.png">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<!-- Vignette and corner bracket only. The scanlines used to live here too, as a
+     full-screen overlay, which meant they fell across the text and the buttons —
+     the two things on the page you actually have to read under shop light. They
+     now sit on the camera images instead, where the CRT reference belongs. -->
+<div class="fx" aria-hidden="true"></div>
+
+<header class="bar">
+  <div class="bar-left">
+    <h1 class="wordmark">Shopcam <span>2000</span></h1>
+    <span class="subtitle">recording control</span>
+  </div>
+  <div class="bar-right">
+    <!-- Storage, as a ring. It used to be a full-width bar reading "49% of the
+         Blue Iris clip allocation" on a rig with 539 GB free, which is not a
+         warning about anything: the allocation is a RING BUFFER and sitting at
+         100% of it is its normal working state. The ring shows the volume, the
+         only number that can actually stop a recording, and the tooltip carries
+         the rest including how many hours the current arm set has left. -->
+    <div id="disk" class="disk" title="Waiting for Blue Iris">
+      <svg class="disk-ring" viewBox="0 0 36 36" aria-hidden="true">
+        <circle class="disk-ring-track" cx="18" cy="18" r="15.5" pathLength="100"/>
+        <circle id="disk-arc" class="disk-ring-arc" cx="18" cy="18" r="15.5"
+                pathLength="100" stroke-dasharray="0 100"/>
+      </svg>
+      <span id="disk-text" class="disk-text">&mdash;</span>
+    </div>
+    <div id="bi-status" class="pill pill--unknown" title="Blue Iris connection">
+      <span class="dot"></span><span class="pill-text">CONNECTING</span>
+    </div>
+    <!-- Fullscreen. The 1080p shop monitor is a dedicated screen for this page
+         and browser chrome on it is 120px of wasted desk; on the phone it also
+         hides the Android status bar when the PWA is not installed yet. -->
+    <button id="btn-fullscreen" class="icon-btn" aria-label="Fullscreen" aria-pressed="false"
+            title="Fullscreen (F)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 9V4h5v2H6v3H4m11-5h5v5h-2V6h-3V4M6 15v3h3v2H4v-5h2m12 0h2v5h-5v-2h3v-3Z"/></svg>
+    </button>
+    <button id="btn-settings" class="icon-btn" aria-label="Settings" aria-expanded="false">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5m7.43-2.53a7.7 7.7 0 0 0 0-1.94l2.03-1.58a.5.5 0 0 0 .12-.62l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.68-.97l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54a7.3 7.3 0 0 0-1.68.97l-2.39-.96a.5.5 0 0 0-.6.22L2.42 8.83a.5.5 0 0 0 .12.62l2.03 1.58a7.7 7.7 0 0 0 0 1.94l-2.03 1.58a.5.5 0 0 0-.12.62l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.52.4 1.08.73 1.68.97l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.6-.24 1.16-.57 1.68-.97l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.62Z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section id="alert" class="alert" hidden></section>
+
+  <section class="cameras-head">
+    <h2 class="section-title">Cameras</h2>
+    <div class="cameras-actions">
+      <span id="arm-summary" class="summary">&mdash;</span>
+      <button id="btn-arm-all" class="ghost-btn" type="button">Arm all</button>
+      <button id="btn-arm-none" class="ghost-btn" type="button">Clear</button>
+    </div>
+  </section>
+
+  <div id="cameras" class="cameras" role="list"></div>
+  <p id="cameras-empty" class="empty" hidden>No cameras to show.</p>
+
+  <!-- The encoders. Four ffmpeg processes that cost electricity every hour of
+       every day, whether or not anyone is filming.
+       Each one's switch lives ON ITS OWN CAMERA CARD, next to Arm and Watch —
+       a control for CAM5 that is not on CAM5 is a control you have to go and
+       find, and reading a name off a list is how you switch off the wrong one.
+       All that is left down here is the fleet-wide pair and what it costs. -->
+  <section id="bridges-section" class="bridges" hidden>
+    <div class="cameras-head">
+      <h2 class="section-title">Encoders</h2>
+      <div class="cameras-actions">
+        <span id="bridge-summary" class="summary">&mdash;</span>
+        <button id="btn-bridges-on" class="ghost-btn" type="button">All on</button>
+        <button id="btn-bridges-off" class="ghost-btn" type="button">All off</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="clips-section" class="clips" hidden>
+    <h2 class="section-title">Last take</h2>
+    <div id="clips" class="clip-list"></div>
+  </section>
+
+</main>
+
+<footer class="transport">
+  <div class="transport-inner">
+    <div class="transport-meta">
+      <div id="timer" class="timer">00:00</div>
+      <div id="transport-status" class="transport-status">Nothing armed</div>
+    </div>
+    <div class="transport-actions">
+      <!-- The other button. Record is a decision you make before the moment;
+           this one is the only thing that can save a moment already gone. -->
+      <button id="btn-twab" class="twab" type="button" data-state="idle"
+              aria-label="That Was Awesome — save the last minute on every Watch camera">
+        <span class="twab-face">
+          <span class="twab-label">That Was Awesome</span>
+          <span id="twab-hint" class="twab-hint"></span>
+        </span>
+      </button>
+      <button id="btn-record" class="record" type="button" data-state="idle"
+              aria-label="Start recording">
+        <span class="record-fill" aria-hidden="true"></span>
+        <span class="record-face">
+          <span class="record-glyph" aria-hidden="true"></span>
+          <span class="record-label">Record</span>
+          <span class="record-hint"></span>
+        </span>
+      </button>
+    </div>
+  </div>
+</footer>
+
+<div id="settings" class="sheet" hidden role="dialog" aria-modal="true" aria-label="Settings">
+  <div class="sheet-panel">
+    <div class="sheet-head">
+      <h2 class="section-title">Settings</h2>
+      <button id="btn-settings-close" class="ghost-btn" type="button">Close</button>
+    </div>
+
+    <label class="row">
+      <span class="row-label">Theme<em>Cogitator is the branded HUD. Clean strips the effects.</em></span>
+      <select id="set-theme" class="select">
+        <option value="cogitator">Cogitator</option>
+        <option value="clean">Clean</option>
+      </select>
+    </label>
+
+    <!-- The whole interface is sized off one root font-size that tracks the
+         window. This multiplies it. Auto-sizing always disagrees with somebody
+         about arm's length, so the somebody gets a knob. -->
+    <label class="row">
+      <span class="row-label">Interface scale<em>Everything resizes together. Auto already tracks the window; this nudges it.</em></span>
+      <select id="set-scale" class="select">
+        <option value="75">75% &mdash; more on screen</option>
+        <option value="90">90%</option>
+        <option value="100">100% &mdash; auto</option>
+        <option value="115">115%</option>
+        <option value="130">130%</option>
+        <option value="150">150% &mdash; read from across the shop</option>
+      </select>
+    </label>
+
+    <label class="row">
+      <span class="row-label">Keep screen awake<em>Holds a wake lock while this page is visible. Needs a secure context.</em></span>
+      <input type="checkbox" id="set-awake" class="switch">
+    </label>
+
+    <label class="row">
+      <span class="row-label">Audio matters<em>Off tells your hooks this take doesn't need a quiet shop.</em></span>
+      <input type="checkbox" id="set-audio" class="switch">
+    </label>
+
+    <label class="row">
+      <span class="row-label">Hide unavailable cameras<em>Offline, disabled or no-signal entries.</em></span>
+      <input type="checkbox" id="set-hide" class="switch">
+    </label>
+
+    <label class="row">
+      <span class="row-label">Thumbnail interval<em>Seconds. They exist to tell cameras apart, not to be a video wall.</em></span>
+      <input type="number" id="set-thumb" class="number" min="30" max="7200" step="30">
+    </label>
+
+    <label class="row">
+      <span class="row-label">Hold-to-stop<em>Milliseconds you must hold to end a take. 0 disables the guard.</em></span>
+      <input type="number" id="set-hold" class="number" min="0" max="5000" step="100">
+    </label>
+
+    <div class="sheet-foot">
+      <div id="about" class="about"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

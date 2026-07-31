@@ -1,0 +1,204 @@
+# Shopcam 2000 Controller — example configuration
+#
+# Copy this file to `config.toml` and fill in your details.
+#   config.toml is gitignored. Never commit real credentials.
+#
+# Every value below can also be supplied via an environment variable, which
+# takes precedence over the file. The variable name is the section and key
+# uppercased and joined with an underscore, prefixed SHOPCAM_:
+#   [blue_iris] password  ->  SHOPCAM_BLUE_IRIS_PASSWORD
+
+[blue_iris]
+# Host and port of the Blue Iris web server (Settings > Web server).
+host = "127.0.0.1"
+port = 81
+
+# A Blue Iris user with the "clip creation" permission — that permission is what
+# allows manual recording to be started and stopped. Consider making a dedicated
+# user for the Controller rather than reusing your admin login.
+user = "changeme"
+password = "changeme"
+
+# Seconds before a request to Blue Iris is abandoned. Blue Iris sessions expire
+# quickly; the Controller re-authenticates automatically when that happens.
+timeout = 10.0
+
+
+[cameras]
+# Only needed for the calibration tools in `calibrate/` and `tools/`, which talk
+# to the cameras directly rather than through Blue Iris. The Controller itself
+# never touches these — it goes through Blue Iris for everything.
+#
+# Group cameras by the control protocol their firmware speaks, not by model:
+# one vendor family shares one credential pair and one driver.
+
+[cameras.amcrest]
+# The Dahua/Amcrest CGI family, reached over HTTP:80 with Digest auth.
+# Also the fallback credential for any host not listed in another section.
+user = "admin"
+password = "changeme"
+hosts = { CAM2 = "192.0.2.11", CAM4 = "192.0.2.12", CAM7 = "192.0.2.13" }
+
+[cameras.foscam]
+# Foscam CGIProxy.fcgi. Note these cameras often refuse `admin` outright.
+user = "changeme"
+password = "changeme"
+host = "192.0.2.14"
+port = 88
+
+[cameras.xiongmai]
+# XiongMai "Sofia" firmware, native protocol DVRIP on TCP 34567. An empty
+# password is normal and real on these — the token in the RTSP URL is the
+# XiongMai hash of "", not a credential.
+host = "192.0.2.15"
+user = "admin"
+password = ""
+
+
+[server]
+# Interface to bind. "0.0.0.0" serves every interface on the machine, which is
+# what you want to reach the Controller from a phone on the same LAN.
+#
+# SECURITY: there is no login on the Controller's own web UI by design. It trusts
+# your LAN. Do NOT port-forward this to the internet.
+host = "0.0.0.0"
+port = 8787
+
+
+[recording]
+# Cameras that should be armed when the Controller first starts, before you have
+# armed anything yourself. Leave empty to start with nothing armed.
+default_armed = []
+
+# Cameras to hide from the UI entirely, whatever their state. Useful for a known
+# permanently-broken entry you have decided to live with.
+always_hide = []
+
+# Sources that are actually MICROPHONES.
+#
+# Blue Iris has no concept of an audio-only source, so a lav mic that reaches it
+# through an encoder arrives as a camera — with a waveform for a picture, because
+# a health check that asks ffprobe for a video stream has to find one. Left
+# unnamed, the Controller draws it as one more camera angle, complete with an
+# encoder switch it does not have.
+#
+# Naming it here gives its card an AUDIO badge and turns its encoder slot into a
+# lit ALWAYS plate instead of a switch. The always-on part is not cosmetic: an
+# encoder switch is safe on a camera because arming that camera wakes it again,
+# and arming a camera has no reason to wake a microphone — so nothing would turn
+# it back on, and the failure would be nine angles of a moment with no voice.
+audio_only = []          # e.g. ["MIC1"]
+
+# Auto-sorting. After a press or a take, copy its clips into one folder named for
+# when it happened: 2026-07-29_23-28-15/ with the nine angles inside and a
+# shopcam.json saying what the event was.
+#
+# Blue Iris writes every camera into one flat directory, so nine angles of the
+# same moment are nine files among hundreds. This is the whole difference between
+# having footage and being able to find it.
+#
+# It is a COPY. The originals stay in Blue Iris's clip database, so the timeline
+# and the /api/clip proxy keep working — at the cost of duplicate bytes, about
+# 460 MB per nine-camera press.
+sort_clips = true
+
+# Where the event folders go. Empty = inside clip_dir, one level deeper than the
+# flat pile.
+#
+# WARNING: on the reference rig clip_dir is C:\BlueIris\New, which Blue Iris
+# manages (registry: action=2 move-to-Stored, archdays=7, 300 GB cap). Blue Iris
+# archives out of its clip database rather than by walking the tree, so copies it
+# has no record of should be left alone — but that is reasoning, not a
+# measurement. Point this at C:\BlueIris\Sorted to have no exposure to it.
+sort_dir = ""
+
+# Refuse to file, loudly, rather than fill the disk that is also recording.
+# All-nine recording burns 21.7 GB/hr, so headroom disappears faster than anyone
+# notices, and a full disk stops Blue Iris writing at all.
+sort_min_free_gb = 25.0
+
+
+[bridges]
+# The ffmpeg encoders the Controller may switch off.
+#
+# A USB webcam, capture card or desktop grab cannot be reached by a network
+# video recorder. An ffmpeg process on this machine publishes each one into an
+# RTSP server (MediaMTX), and Blue Iris subscribes as if it were an IP camera.
+# See docs/usb-to-h264.md, or run `shopcam encode --list` to get started.
+#
+# Each of those runs 24 hours a day whether or not anyone is filming. Measured
+# on the reference rig: four of them cost 6.8 W of GPU and 34 percentage points
+# of CPU. Hence the switch.
+#
+# The Controller never kills an encoder. It writes state_path; supervisor.ps1
+# reads that file every cycle and starts or stops them to match. Killing them
+# directly would be undone within 30 seconds by the supervisor, which would also
+# log it as a fault — correctly, because from where it sits that is what it is.
+enabled = true
+
+# Where the desired state is written. The supervisor reads the same path.
+# Empty = <SHOPCAM_HOME>/var/bridges.state.json, which is usually right.
+state_path = ''
+
+# 🔴 OFF until switched on — including after a reboot, and on first install.
+# The whole feature exists because "I forget to turn it off" costs money, so
+# forgetting has to be the cheap direction. Turning one on is one tap and a few
+# seconds. Setting this true reintroduces exactly the bill it was built to stop.
+default_on = false
+
+# "<rtsp path>:<Blue Iris camera name>". The left half is also the name of the
+# run_<id>.cmd script and the component name in supervisor.ps1 — those three
+# agreeing is what lets the supervisor find the processes without a PID file.
+# Empty is correct if all your cameras are IP cameras.
+bridges = []
+
+
+[ui]
+# "cogitator" — dark HUD, red and brass, scanlines. The default.
+# "clean"     — white on black, red highlights, effects stripped.
+theme = "cogitator"
+
+# Seconds between thumbnail refreshes. Thumbnails exist to tell cameras apart,
+# not to be a video wall — the default is deliberately slow, because the machine
+# fetching them is usually the same machine encoding your footage.
+thumbnail_interval = 600
+
+# Hide cameras that are offline, disabled or in a no-signal state.
+hide_unavailable = false
+
+# Default position of the "audio matters" switch. When false, hooks are told the
+# take does not need silence, so they can skip pausing music or TV.
+audio_matters = true
+
+# Milliseconds you must hold the RECORD button to stop a take in progress.
+# Guards against ending a take by brushing the screen. 0 disables the hold.
+stop_hold_ms = 1000
+
+# Interface scale, percent, 75–150.
+#
+# The stylesheet sizes EVERYTHING — type, buttons, cards, bars, gaps — off a
+# single root font size that already tracks the viewport, so the layout fits
+# whatever window it is given without a fixed breakpoint per device. This
+# multiplies that. 100 is the automatic size; raise it for a screen you read
+# from across the room, lower it to get more cameras on screen at once.
+ui_scale = 100
+
+# Hold a screen wake lock while the page is visible, so a control panel sitting
+# on the bench does not blank between takes.
+#
+# ⚠️ Requires a SECURE CONTEXT. Over plain http:// to anything but localhost the
+# Wake Lock API does not exist — and the same rule blocks the service worker, so
+# the browser will also never offer to install this as an app. Two ways out:
+#   • per device: chrome://flags/#unsafely-treat-insecure-origin-as-secure, add
+#     http://<rig-ip>:8787, relaunch. Two minutes, no certificates.
+#   • properly: serve TLS. See docs/https.md.
+# Settings › About reports which of these you are in, rather than failing quietly.
+keep_awake = true
+
+
+[polling]
+# Seconds between polls of Blue Iris, by situation. One poller serves every
+# connected browser, so these costs do not multiply with open tabs.
+while_recording = 1.0
+idle = 4.0
+offline_backoff = 20.0

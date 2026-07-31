@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "shopcam2000"
+version = "0.1.0"
+description = "Arm-and-record controller for a multi-camera workshop rig, with a one-button 'that was awesome' rescue for the moment you did not press record on."
+readme = "README.md"
+requires-python = ">=3.11"          # tomllib
+license = { file = "LICENSE" }
+authors = [{ name = "Dan Mundy", email = "gearscodeandfire@gmail.com" }]
+keywords = ["blue-iris", "rtsp", "ffmpeg", "camera", "recording", "workshop", "video"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Web Environment",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Multimedia :: Video :: Capture",
+]
+
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.34",
+  "httpx>=0.28",
+]
+
+# ffmpeg and ffprobe are NOT here and never will be: they are not on PyPI, they
+# are platform-specific, and their licensing depends on which encoders your
+# build included. `shopcam doctor` finds them and tells you how to install them.
+
+[project.urls]
+Homepage = "https://github.com/dan-gearscodeandfire/shopcam2000-public"
+Issues = "https://github.com/dan-gearscodeandfire/shopcam2000-public/issues"
+
+[project.scripts]
+shopcam = "shopcam2000.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/shopcam2000"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/shopcam2000/config.example.toml" = "shopcam2000/config.example.toml"
+
+[tool.hatch.build]
+# The UI is part of the package, not an extra: a controller with no control
+# surface is not a smaller install, it is a broken one.
+artifacts = [
+  "src/shopcam2000/static/**",
+  "src/shopcam2000/templates/**",
+]

@@ -1,0 +1,25 @@
+# Your configuration, which contains your recorder password.
+# 🔴 NEVER commit this. `shopcam init` writes it; it stays local.
+config.toml
+
+# Runtime state: arming set, settings, bridge desired-state, cached thumbnails.
+var/
+
+# Your hooks, which are yours.
+hooks.py
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

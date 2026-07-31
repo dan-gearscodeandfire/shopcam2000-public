@@ -1,0 +1,17 @@
+{
+  "name": "Shopcam 2000 Controller",
+  "short_name": "Shopcam",
+  "description": "Arm-and-record controller for a Blue Iris camera rig.",
+  "start_url": "/",
+  "scope": "/",
+  "display_override": ["fullscreen", "standalone"],
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0000",
+  "theme_color": "#0a0000",
+  "icons": [
+    { "src": "/static/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Shopcam 2000">
+  <rect width="512" height="512" rx="96" fill="#0a0000"/>
+  <!-- corner brackets, the Cogitator signature -->
+  <g stroke="#ff2d2d" stroke-width="14" fill="none" stroke-linecap="square">
+    <path d="M96 148V96h52"/>
+    <path d="M416 364v52h-52"/>
+  </g>
+  <!-- gear ring: 'gears' -->
+  <g fill="none" stroke="#c79a4a" stroke-width="16">
+    <circle cx="256" cy="256" r="118"/>
+  </g>
+  <g fill="#c79a4a">
+    <rect x="246" y="112" width="20" height="34" rx="3"/>
+    <rect x="246" y="366" width="20" height="34" rx="3"/>
+    <rect x="112" y="246" width="34" height="20" rx="3"/>
+    <rect x="366" y="246" width="34" height="20" rx="3"/>
+    <g transform="rotate(45 256 256)">
+      <rect x="246" y="112" width="20" height="34" rx="3"/>
+      <rect x="246" y="366" width="20" height="34" rx="3"/>
+      <rect x="112" y="246" width="34" height="20" rx="3"/>
+      <rect x="366" y="246" width="34" height="20" rx="3"/>
+    </g>
+  </g>
+  <!-- record dot: 'fire' -->
+  <circle cx="256" cy="256" r="62" fill="#ff2d2d"/>
+  <circle cx="256" cy="256" r="62" fill="none" stroke="#ff6a6a" stroke-width="6" opacity="0.7"/>
+</svg>
