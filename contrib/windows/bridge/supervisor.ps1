@@ -1,9 +1,9 @@
-﻿# Shopcam 2000 â€” rig supervisor.
+﻿# Shopcam 2000 — rig supervisor.
 #
 # Blue Iris has a scheduled task. Nothing else did: MediaMTX and the ffmpeg
 # bridges ran as bare detached processes, so a crash left a camera dark until a
-# human noticed. Once CAM1/CAM5/CAM8 are all bridged that is station 1 â€” ~80% of
-# the footage â€” hanging off unmanaged processes.
+# human noticed. Once CAM1/CAM5/CAM8 are all bridged that is station 1 — ~80% of
+# the footage — hanging off unmanaged processes.
 #
 #   powershell -NoProfile -ExecutionPolicy Bypass -File supervisor.ps1
 #   powershell ... -File supervisor.ps1 -Once        # one pass, for testing
@@ -12,7 +12,7 @@
 # It also decides which bridges are wanted at all, from bridges.state.json -
 # see DESIRED STATE below. Bridges are OFF until something turns them on.
 #
-# ðŸ”‘ HEALTH IS MEASURED ON THE TRANSPORT THE CONSUMER USES, NOT ON THE PROCESS.
+# 🔑 HEALTH IS MEASURED ON THE TRANSPORT THE CONSUMER USES, NOT ON THE PROCESS.
 # "Is ffmpeg running" would have passed all through 2026-07-26 while CAM6 sat
 # there delivering zero frames, and it was a snapshot-vs-RTSP mix-up that made us
 # blame Blue Iris for a camera fault in the first place. So a bridge is healthy
@@ -32,7 +32,7 @@ $MaxLogBytes = 4MB
 
 # Restart policy: a component that keeps dying must not be hammered. After
 # $BurstLimit restarts inside $BurstWindowSeconds it is parked for $CooldownSeconds
-# and logged loudly â€” a bridge that cannot stay up is a fault to look at, not a
+# and logged loudly — a bridge that cannot stay up is a fault to look at, not a
 # thing to respawn 2000 times overnight.
 $BurstLimit       = 3
 $BurstWindowSeconds = 300
@@ -76,7 +76,7 @@ $StateFile = "$Root\bridges.state.json"
 $DefaultBridgeEnabled = $false
 
 # --------------------------------------------------------------------------
-# Components. Adding CAM1/CAM5 later is one line each â€” that is the point.
+# Components. Adding CAM1/CAM5 later is one line each — that is the point.
 #
 # `Toggle` marks a component the Controller may turn off. Its Name doubles as
 # the RTSP path and as the run_<name>.cmd script name, which is what makes
@@ -146,7 +146,7 @@ $Components = @(
 )
 
 # Blue Iris and the Controller are CHECKED but never auto-restarted here.
-# BI owns its own scheduled task and restarting it drops all nine cameras â€” that
+# BI owns its own scheduled task and restarting it drops all nine cameras — that
 # is a decision for a human, not a 30-second loop. The Controller is not yet
 # deployed to this box; when it is, give it a Start block.
 $Observed = @(
@@ -160,7 +160,7 @@ function Write-Log {
     # PIPELINE, so a log call inside a function silently becomes part of that
     # function's return value: `if (Invoke-Restart ...)` then sees @(string, bool),
     # which is always truthy, and the line never reaches the console. Cost us a
-    # debugging session on 2026-07-27 â€” the file log had entries the console did not.
+    # debugging session on 2026-07-27 — the file log had entries the console did not.
     param([string]$Level, [string]$Message)
     $line = "{0} [{1}] {2}" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $Level, $Message
     Write-Host $line
@@ -183,8 +183,8 @@ function Test-Port {
 }
 
 function Test-RtspFrame {
-    # Pull one frame. Anything else â€” process alive, port open, ffmpeg log looking
-    # busy â€” can be true while the stream delivers nothing.
+    # Pull one frame. Anything else — process alive, port open, ffmpeg log looking
+    # busy — can be true while the stream delivers nothing.
     param([string]$Path, [int]$TimeoutSeconds = 12)
     $url = "rtsp://127.0.0.1:8554/$Path"
     try {
@@ -201,14 +201,14 @@ function Test-RtspFrame {
 }
 
 function Start-Detached {
-    # ðŸ”‘ WMI Win32_Process.Create, NOT Start-Process. A process started with
-    # Start-Process is a child of this PowerShell and dies with it â€” over SSH the
+    # 🔑 WMI Win32_Process.Create, NOT Start-Process. A process started with
+    # Start-Process is a child of this PowerShell and dies with it — over SSH the
     # whole job object is torn down on disconnect, so the bridge came up, wrote
     # about eight frames, and vanished. Win32_Process.Create spawns a genuinely
     # detached process that outlives its launcher. This is the same reason the
     # bridge was always launched this way by hand (shopcam-usb-camera-stack).
     #
-    # NB: the parameter is $Arguments, NOT $Args â€” `$Args` is a PowerShell
+    # NB: the parameter is $Arguments, NOT $Args — `$Args` is a PowerShell
     # automatic variable and declaring it as a parameter silently yields "".
     param([string]$File, [string]$Arguments)
     $cmdline = if ($Arguments) { "`"$File`" $Arguments" } else { "`"$File`"" }
