@@ -171,6 +171,16 @@ class Controller:
         # Serialises presses so each one sees the buffer state the previous press
         # left behind, rather than all of them reading it before any writes it.
         self._twab_lock = asyncio.Lock()
+        # 🕐 The idle clock — see _check_idle. Monotonic, so a clock correction or
+        # a DST step cannot convince the rig it has been idle since last year.
+        # It starts NOW rather than at zero: a Controller restart is not two hours
+        # of neglect, and starting expired would switch the encoders off moments
+        # after someone deliberately brought them up.
+        self._last_activity = time.monotonic()
+        self._last_activity_was = "the Controller starting"
+        # Did the clock put them to sleep, as opposed to a human? Only so the page
+        # can say which, and cleared the moment anything comes back on.
+        self._idle_asleep = False
 
     # ------------------------------------------------------------- lifecycle
 
@@ -229,6 +239,7 @@ class Controller:
             "armed": [],
             "overwatch": [],
             "bridges": [],
+            "encoderIdle": None,
             "twab": None,
             "settings": {},
             "hooks": {"loaded": False, "functions": []},
@@ -238,6 +249,14 @@ class Controller:
     async def _poll_loop(self) -> None:
         while True:
             try:
+                # Before the poll, not after: switching the encoders off changes
+                # what the poll is about to describe, so doing it first means the
+                # page sees the new state this cycle instead of showing a stale
+                # "on" for another interval. It also runs when Blue Iris is down
+                # — _poll_once returns early then, and an offline Blue Iris is if
+                # anything a stronger reason to stop burning power on encoders
+                # nothing is reading.
+                self._check_idle()
                 await self._poll_once()
             except asyncio.CancelledError:
                 raise
@@ -444,15 +463,114 @@ class Controller:
             "armed": sorted(self.state.armed),
             "overwatch": sorted(self.state.overwatch),
             "bridges": self.bridges.view(cameras),
+            "encoderIdle": self._idle_view(),
             "twab": self._twab_result,
             "settings": asdict(settings),
             "hooks": {"loaded": self.hooks.loaded, "functions": self.hooks.available},
             "ts": time.time(),
         }
 
+    # ------------------------------------------------------------ idle clock
+
+    def note_activity(self, what: str) -> None:
+        """Somebody is using the rig. Reset the idle clock.
+
+        🔑 USING IS NOT LOOKING. Only things that CHANGE something land here —
+        arming, watching, an encoder switch, a press, a take, a settings change,
+        and a fresh page load. Deliberately NOT: the SSE stream, /api/state,
+        thumbnails, static files, or the TWAB button's telemetry heartbeat.
+
+        That distinction is the whole feature. Every one of those is an HTTP
+        request that arrives on its own schedule from a tab nobody is standing
+        in front of, and the button heartbeats whether or not a human is in the
+        county. Counting them would hold the clock open forever: the timer would
+        never once fire, and the only visible symptom would be a power bill that
+        did not change — a feature that silently does nothing, which is worse
+        than one that visibly does the wrong thing.
+
+        The other half is that the reverse mistake is just as real: he can work
+        in the shop for three hours without touching the page, because the point
+        of a physical button is not needing a computer. So a press counts, from
+        the button as much as the UI, and so does anything he taps on the way
+        past. What is being measured is use of the RIG, not attendance at a
+        browser.
+        """
+        self._last_activity = time.monotonic()
+        self._last_activity_was = what
+
+    def _idle_timeout(self) -> float:
+        """Seconds of disuse before the encoders sleep. 0 = never."""
+        return max(0.0, float(self.config.bridges.idle_off_minutes) * 60.0)
+
+    def _check_idle(self) -> None:
+        """Switch every encoder off once nobody has used the rig for a while.
+
+        🔑 THE ONE PLACE A CLOCK IS ALLOWED TO SAY OFF. Read _wake_bridges_for
+        first — it holds the opposite rule and the reason for it. The asymmetry
+        there stands unchanged for every other caller; this is a single, named,
+        re-decided exception, and it is named in the state file (`by`) precisely
+        so the exception can never be mistaken for the rule.
+
+        ⚠️ Decided 2026-08-07 and worth not re-deciding by accident: an armed or
+        watched camera does NOT hold the clock open. Arming is a statement that
+        you want a camera's footage, not a statement that you are here — and a
+        board left armed overnight is the normal case, not the exception, so
+        honouring it would mean the timer never ran on the nights it exists for.
+        The cost is accepted and made visible instead: a press against sleeping
+        encoders already reads "save 5 of 9 — 4 encoders off" on the button and
+        lands those cameras under `missing` in the sorted folder.
+
+        A take in flight is different and does stop the clock. Stopping a bridge
+        mid-recording is, in set_bridge's own words, a spectacular way to lose
+        footage, and unlike an arm set a take cannot be left running by mistake.
+        """
+        timeout = self._idle_timeout()
+        if timeout <= 0 or not self.bridges.available:
+            return
+        # Not just "don't sleep now" — this restamps, so a three-hour take is
+        # followed by a full fresh timeout rather than a shutdown seconds after
+        # the operator stops recording and turns round to look at the shot.
+        if self.state.take.active or self._collecting:
+            self.note_activity("a take")
+            return
+        idle = time.monotonic() - self._last_activity
+        if idle < timeout:
+            return
+        live = [b for b, on in self.bridges.desired().items() if on]
+        if not live:
+            return
+        stopped = self.bridges.set_many(live, False, by="idle-timer")
+        if stopped:
+            self._idle_asleep = True
+            log.warning(
+                "encoder(s) %s switched OFF by the idle timer — nothing has used "
+                "the rig for %.0f min (last was %s). Their cameras are now "
+                "offline in Blue Iris and a press will not save them until they "
+                "are back: ~20 s to record, ~80 s to a full minute of pre-roll.",
+                ", ".join(stopped), idle / 60.0, self._last_activity_was)
+
+    def _idle_view(self) -> dict | None:
+        """The clock, for the page. None when there is no clock to show."""
+        timeout = self._idle_timeout()
+        if not self.bridges.available or timeout <= 0:
+            return None
+        idle = time.monotonic() - self._last_activity
+        anything_on = any(self.bridges.desired().values())
+        return {
+            "timeoutSec": round(timeout),
+            "idleSec": round(idle),
+            # None when there is nothing left to switch off — a countdown to an
+            # event that cannot happen is the kind of detail that makes an
+            # operator distrust everything next to it.
+            "sleepsInSec": round(max(0.0, timeout - idle)) if anything_on else None,
+            "asleep": self._idle_asleep and not anything_on,
+            "lastActivity": self._last_activity_was,
+        }
+
     # --------------------------------------------------------------- actions
 
-    def _wake_bridges_for(self, cameras: list[str]) -> list[str]:
+    def _wake_bridges_for(self, cameras: list[str], reason: str,
+                          by: str = "controller") -> list[str]:
         """Arming or watching a camera turns its encoder on. Never off.
 
         Arming a camera is a statement that you want its footage. An encoder
@@ -465,7 +583,14 @@ class Controller:
         encoder. Half the reason to leave one running is to keep watching it,
         and an encoder that shut itself down because you cleared the arm set
         would be a camera that went dark without anyone deciding it should.
-        Only the Enc switch (or All off) turns one off.
+
+        ⚠️ AMENDED 2026-08-07, and this is the only amendment: the Enc switch and
+        All off are no longer the only things that turn one off. `_check_idle`
+        does too, after `bridges.idle_off_minutes` with nobody using the rig.
+        Read that method for the argument — it was re-decided, not forgotten, and
+        it remains a single named exception rather than a softening of the rule.
+        Nothing else may stop an encoder implicitly, and in particular clearing
+        an arm or watch set still must not.
 
         It is also not instant: measured 2026-07-30, ~20 s before Blue Iris can
         record and ~80 s before there is a full minute of pre-roll behind it.
@@ -475,30 +600,39 @@ class Controller:
             return []
         wanted = [self.bridges.by_camera[c] for c in cameras
                   if c in self.bridges.by_camera]
-        started = self.bridges.set_many(wanted, True)
+        started = self.bridges.set_many(wanted, True, by=by)
         if started:
+            # Anything waking an encoder has just contradicted the clock, so the
+            # clock starts again. Otherwise a wake at 1 h 59 m would be undone a
+            # minute later by a countdown that had been running the whole time.
+            self._idle_asleep = False
+            self.note_activity(reason)
             log.info("encoder(s) %s were off and are being started - asked for "
-                     "by arming or watching %s",
-                     ", ".join(started), ", ".join(sorted(set(cameras))))
+                     "by %s",
+                     ", ".join(started), reason)
         return started
 
     async def set_armed(self, camera: str, armed: bool) -> None:
+        self.note_activity(f"arming {camera}" if armed else f"disarming {camera}")
         self.state.set_armed(camera, armed)
         if armed:
-            self._wake_bridges_for([camera])
+            self._wake_bridges_for([camera], f"arming {camera}")
         await self._refresh()
 
     async def set_armed_bulk(self, cameras: list[str]) -> None:
         # The new set only. A camera dropped from it keeps its encoder.
+        self.note_activity("setting the arm list")
         self.state.set_armed_bulk(cameras)
         if cameras:
-            self._wake_bridges_for(cameras)
+            self._wake_bridges_for(cameras, "setting the arm list")
         await self._refresh()
 
     async def set_overwatch(self, camera: str, overwatch: bool) -> None:
+        self.note_activity(
+            f"watching {camera}" if overwatch else f"unwatching {camera}")
         self.state.set_overwatch(camera, overwatch)
         if overwatch:
-            self._wake_bridges_for([camera])
+            self._wake_bridges_for([camera], f"watching {camera}")
         await self._refresh()
 
     async def set_bridge(self, bridge_id: str | None, on: bool) -> dict[str, bool]:
@@ -517,6 +651,9 @@ class Controller:
         """
         if not self.bridges.available:
             raise RuntimeError("bridge switching is not configured")
+        self.note_activity("the encoder switch")
+        if on:
+            self._idle_asleep = False
         if bridge_id is None:
             wanted = self.bridges.set_all(on)
         else:
@@ -617,6 +754,13 @@ class Controller:
             return await self._twab_locked(source)
 
     async def _twab_locked(self, source: str) -> dict:
+        # 🕐 A press is the strongest possible evidence that someone is in the
+        # shop, and it counts whichever button was pressed — the whole reason
+        # _twab_result exists is that the physical button and the page are the
+        # same event. Stamped BEFORE anything can fail: a press that finds every
+        # camera dark is still a press, and it is the press that most needs the
+        # rig awake for whatever happens next.
+        self.note_activity(f"a TWAB press ({source})")
         now = time.time()
         break_time = float(self.config.recording.break_time_seconds)
         full = float(self.config.recording.max_preroll_seconds)
@@ -702,6 +846,27 @@ class Controller:
         # Same rule the route uses, kept here so what the pages render and what
         # the firmware reads can never disagree about how the press went.
         published = self._record_twab(source, 200 if triggered else 502, result)
+
+        # 🕐 Wake anything on Watch that the idle timer had put to sleep — AFTER
+        # the receipt, never before. Waking first would change nothing about this
+        # press (~20 s to record, ~80 s to a full minute of lead-in) while
+        # corrupting the one thing the receipt is for: an honest account of which
+        # cameras were dark at the moment the button went down.
+        #
+        # It cannot rescue the press that woke it. It is here so that the SECOND
+        # press works. Without this, a rig that went to sleep overnight would
+        # fail every press of the morning identically, and the button would have
+        # to be repaired by hand at the very moment its owner is busy — "on is
+        # implied" already permits this; a press is the least ambiguous statement
+        # of intent the system has.
+        woke = self._wake_bridges_for(sorted(self.state.overwatch),
+                                      f"a TWAB press ({source})")
+        if woke:
+            log.warning("TWAB: %s had been switched off and %s being started — "
+                        "THIS press did not save %s. ~20 s to recording, ~80 s "
+                        "to a full minute of pre-roll.",
+                        ", ".join(woke), "is" if len(woke) == 1 else "are",
+                        "it" if len(woke) == 1 else "them")
         if triggered and self.config.recording.verify_clips:
             # Fire-and-forget on purpose: the press has already been answered.
             task = asyncio.create_task(
@@ -828,6 +993,15 @@ class Controller:
                        "notSaved": bad},
             )
 
+            # The press path has no other hook. Everything that wants to run
+            # "once the button's footage has landed" hangs off this, and it is
+            # deliberately fired here rather than earlier: verification has
+            # already waited out break time and opened every file, so a hook
+            # can trust the folder is complete. HookRunner runs it on a daemon
+            # thread, so a slow or broken hook cannot delay recording.
+            if verdict["sort"].get("sorted"):
+                self.hooks.twab_filed(verdict["sort"])
+
             # Only attach it if this is still the press on screen. A newer press
             # has its own verification coming, and overwriting its receipt with an
             # older one would report the wrong event.
@@ -843,6 +1017,7 @@ class Controller:
             log.exception("TWAB verify failed unexpectedly")
 
     async def update_settings(self, changes: dict) -> None:
+        self.note_activity("a settings change")
         self.state.update_settings(changes)
         await self._refresh()
 
@@ -853,6 +1028,7 @@ class Controller:
 
     async def start_recording(self) -> dict:
         """Arm set -> Blue Iris. Best effort: report what failed, keep what worked."""
+        self.note_activity("starting a take")
         async with self._record_lock:
             if self.state.take.active:
                 return {"ok": True, "already": True}
@@ -887,6 +1063,7 @@ class Controller:
             return {"ok": True, "started": started, "failures": failures}
 
     async def stop_recording(self) -> dict:
+        self.note_activity("stopping a take")
         async with self._record_lock:
             take = self.state.take
             if not take.active:

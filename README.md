@@ -73,6 +73,41 @@ You also need **ffmpeg** on PATH for `shopcam encode` and for clip verification.
 It is not a pip dependency — it cannot be — so `shopcam doctor` finds it and
 tells you how to install it.
 
+## First run
+
+```
+pip install .
+mkdir my-rig && cd my-rig
+shopcam init      # asks where Blue Iris is, tests the login, lists your cameras
+shopcam doctor    # checks the things that fail silently
+shopcam serve     # the Controller, on your LAN
+```
+
+`shopcam init` will not write a config it could not verify without telling you.
+It asks for the Blue Iris host, port, user and password, logs in, prints every
+camera it found, and lets you hide any and mark any as a microphone. Cameras are
+not configured here — add them in Blue Iris and they appear. Change your mind
+later in `config.toml`, which stays fully commented.
+
+## The physical button (firmware)
+
+[`firmware/`](firmware/) holds four ESP-IDF projects: the battery **button**
+(Seeed XIAO ESP32S3), the mains **master** (ESP-NOW receiver, no WiFi), the
+mains **bridge** (WiFi + OTA, posts to the Controller), and the original
+one-chip button. Read
+[firmware/README.md → *Where your own values go*](firmware/README.md) first: it
+names the three files that take your key, your MAC and your WiFi, and nothing
+else needs editing.
+
+## USB cameras, and cameras Blue Iris cannot see
+
+[`contrib/windows/bridge/`](contrib/windows/bridge/) has the exact ffmpeg
+scripts the reference rig runs to turn USB cameras, a microphone and the desktop
+into RTSP cameras, the supervisor that keeps them alive, and two PowerShell
+scripts that **add** such a camera to Blue Iris or **convert** an existing USB
+camera into a bridged one. [`contrib/hooks/`](contrib/hooks/) is what runs after
+a press: colour re-tagging and transcription.
+
 ## The documentation is the point
 
 Most of this code is ordinary. What is not ordinary is that the awkward parts

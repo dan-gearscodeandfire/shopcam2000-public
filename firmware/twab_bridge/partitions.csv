@@ -1,0 +1,7 @@
+# Two OTA app slots + otadata so esp_https_ota can A/B update.
+# 4 MB flash assumed (adjust ota_0/ota_1 down to 1M each for smaller parts).
+# Name,   Type, SubType, Offset,  Size, Flags
+nvs,      data, nvs,     0x9000,  0x5000,
+otadata,  data, ota,     0xe000,  0x2000,
+ota_0,    app,  ota_0,   0x10000, 0x1E0000,
+ota_1,    app,  ota_1,   ,        0x1E0000,

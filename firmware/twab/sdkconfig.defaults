@@ -1,0 +1,34 @@
+# TWAB defaults — deep-sleep button with OTA A/B slots and rollback safety.
+
+# Custom partition table (two OTA slots) — requires a 4 MB flash part,
+# which is what every common ESP32 dev board ships with.
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# OTA transport is plain HTTP on the shop LAN — but images must be SIGNED.
+# Without signing, anything on the LAN that can serve (or spoof) the
+# Controller could hand the button an arbitrary twab.bin, and the device
+# holds the shop WiFi credentials. The build signs automatically with
+# secure_boot_signing_key.pem (gitignored — generate once, back it up:
+#   espsecure.py generate_signing_key --version 1 secure_boot_signing_key.pem
+# losing the key means future updates need a USB reflash).
+CONFIG_ESP_HTTPS_OTA_ALLOW_HTTP=y
+CONFIG_SECURE_SIGNED_APPS_NO_SECURE_BOOT=y
+CONFIG_SECURE_SIGNED_APPS_ECDSA_SCHEME=y
+CONFIG_SECURE_SIGNED_ON_UPDATE_NO_SECURE_BOOT=y
+CONFIG_SECURE_BOOT_SIGNING_KEY="secure_boot_signing_key.pem"
+
+# New image must prove itself (we mark valid only after a successful
+# telemetry POST); otherwise the bootloader rolls back to the old slot.
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+
+# C++
+CONFIG_COMPILER_CXX_EXCEPTIONS=n
+
+# Log verbosely over UART while bench-debugging; runtime output also mirrors
+# to UDP when the network is up (see udp_log in main.cpp).
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+
+# Power: no need for max CPU to POST one HTTP request.
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y

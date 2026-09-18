@@ -152,6 +152,16 @@ default_on = false
 # Empty is correct if all your cameras are IP cameras.
 bridges = []
 
+# Minutes of nobody using the rig before every encoder above is switched off.
+# 0 = never. This is the ONE implicit "off" in the system - everywhere else, on
+# is implied and off is only ever a deliberate tap. What it costs: an encoder
+# that is off has no past. After a wake it is ~20 s before the recorder records
+# at all and ~80 s before a full minute of pre-roll sits behind it, so the first
+# press after a sleep saves little. A press is itself a wake signal.
+# Resets the clock: a press, an arm, a watch, the encoder switch, a take, a
+# settings change, opening the page. Does NOT: a page merely left open.
+idle_off_minutes = 120.0
+
 
 [ui]
 # "cogitator" — dark HUD, red and brass, scanlines. The default.

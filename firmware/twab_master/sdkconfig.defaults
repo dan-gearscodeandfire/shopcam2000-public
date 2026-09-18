@@ -1,0 +1,23 @@
+# twab_master — no WiFi association, no OTA, no secrets on the box.
+#
+# Deliberately NOT OTA-capable: this board never joins the LAN, so there is no
+# path to push it an image, and pretending otherwise would just waste a flash
+# partition. Reflash it over USB on the bench; it is a 300-line program that
+# should change roughly never.
+
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+
+# C++ without exceptions — same as the rest of the fleet.
+CONFIG_COMPILER_CXX_EXCEPTIONS=n
+
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+
+# The radio is the whole job; give it room and never let it doze.
+CONFIG_ESP_WIFI_STATIC_RX_BUFFER_NUM=10
+CONFIG_ESP_WIFI_DYNAMIC_RX_BUFFER_NUM=32
+
+# Mains powered, and a press should forward in single-digit milliseconds.
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y
+
+# Watchdog on: a wedged forward task must reboot, not sit there looking alive.
+CONFIG_ESP_TASK_WDT_INIT=y

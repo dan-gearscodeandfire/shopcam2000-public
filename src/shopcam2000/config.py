@@ -118,6 +118,11 @@ class BridgesConfig:
     Four NVENC sessions and four x264 substreams run 24/7 whether or not anyone
     is filming, and that is a power bill. The Controller does not kill them - it
     writes ``state_path`` and the supervisor starts and stops them to match.
+
+    Two ways they go off: a human taps the switch, or ``idle_off_minutes``
+    elapses with nobody using the rig. MIC1 is in neither - it has no switch on
+    purpose, it is audio-only and costs almost nothing to run, and it is the one
+    stream whose loss is silent until the edit.
     """
 
     enabled: bool = True
@@ -132,6 +137,12 @@ class BridgesConfig:
     # Empty by default: most people's cameras are IP cameras that reach the
     # recorder on their own and have no encoder here to switch.
     bridges: list[str] = field(default_factory=list)
+    # Switch every bridge off after this long with nobody using the rig.
+    # 0 disables the clock. An encoder that is OFF has no past: measured on the
+    # reference rig, a bridge that has just come back needs ~20 s before the
+    # recorder can record at all and ~80 s before a full minute of pre-roll
+    # exists behind it - so a press is itself a wake signal.
+    idle_off_minutes: float = 120.0
 
 
 @dataclass

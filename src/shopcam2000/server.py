@@ -105,6 +105,13 @@ def create_app(config: Config) -> FastAPI:
 
     @app.get("/", response_class=HTMLResponse)
     async def index() -> HTMLResponse:
+        # 🕐 The one GET that resets the idle clock, and the reasoning is worth
+        # keeping: OPENING the page is an event, having it open is not. Every
+        # other read the page performs — the SSE stream, /api/state, thumbnails,
+        # static files — arrives on a timer from a tab that may have been left up
+        # on a bench overnight, and counting those would hold the clock open for
+        # ever. A page load is a person arriving. See Controller.note_activity.
+        controller.note_activity("opening the page")
         return HTMLResponse((TEMPLATES / "index.html").read_text(encoding="utf-8"))
 
     @app.get("/manifest.webmanifest")

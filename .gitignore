@@ -23,3 +23,11 @@ venv/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Firmware: your key, your WiFi, your build. NEVER commit these.
+firmware/common/twab_secrets.h
+firmware/**/bridge_config.h
+firmware/**/twab_config.h
+firmware/**/sdkconfig
+firmware/**/build/
+*.pem

@@ -303,13 +303,27 @@ function renderCameras(state) {
  * and trust the label. Every control for a camera belongs on that camera.
  *
  * What is left here is only what is genuinely fleet-wide: the count, the two
- * bulk buttons, and what off costs.
+ * bulk buttons, what off costs, and how long until the idle clock does it for
+ * you.
  *
  * Note there are two truths on screen at once — what was asked for and what
  * Blue Iris reports — and for a few seconds after a tap they disagree. That is
  * what `pending` is: not a spinner on a timer, but an honest "asked, not agreed
  * yet". Measured: ~20 s to recording, ~80 s to a full minute of pre-roll.
  */
+/** "1h 23m", "6m", "40s" — coarse on purpose. A two-hour countdown ticking a
+ *  second at a time reads as something you are supposed to watch, and this is
+ *  not. Seconds only appear in the last minute, when they start to matter. */
+function shortDuration(seconds) {
+  const s = Math.max(0, Math.round(seconds));
+  if (s < 60) return `${s}s`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  const rem = m % 60;
+  return rem ? `${h}h ${rem}m` : `${h}h`;
+}
+
 function renderBridges(state) {
   const list = state.bridges || [];
   el.bridgesSection.hidden = list.length === 0;
@@ -317,11 +331,30 @@ function renderBridges(state) {
 
   const on = list.filter((b) => b.enabled).length;
   const busy = list.filter((b) => b.pending).length;
+  // 🕐 The idle clock, said out loud. An encoder that switches itself off is a
+  // camera going dark without anyone touching it, which is the exact thing the
+  // "off is only ever explicit" rule existed to prevent — so the compensation
+  // for relaxing that rule is that the countdown is never hidden and the sleep
+  // is never anonymous. Nobody should have to open a log to find out why CAM5
+  // is offline.
+  const idle = state.encoderIdle;
+  let tail = '';
+  if (idle && idle.sleepsInSec !== null && idle.sleepsInSec !== undefined) {
+    tail = ` · sleeps in ${shortDuration(idle.sleepsInSec)}`;
+  }
+
   el.bridgeSummary.textContent = busy
     ? `${on} of ${list.length} on · ${busy} changing`
     : on
-      ? `${on} of ${list.length} on`
-      : 'all off — no power being burned';
+      ? `${on} of ${list.length} on${tail}`
+      : idle && idle.asleep
+        ? `all off — idle ${shortDuration(idle.idleSec)}, a press will wake them`
+        : 'all off — no power being burned';
+  el.bridgeSummary.title = idle
+    ? `Encoders switch off after ${shortDuration(idle.timeoutSec)} with nobody `
+      + `using the rig. Last use: ${idle.lastActivity}. A press, an arm, a `
+      + `watch or the switch resets the clock — an open page on its own does not.`
+    : '';
   el.bridgesOn.disabled = on === list.length;
   el.bridgesOff.disabled = on === 0;
 }

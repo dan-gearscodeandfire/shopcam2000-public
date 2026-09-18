@@ -1,0 +1,37 @@
+# twab_button — battery ESP-NOW node. No WiFi association, no OTA.
+#
+# No OTA on purpose: this board never joins the LAN, so there is no route to
+# push it an image. It is USB-flashed on the bench. See firmware/README.md for
+# why that trade is worth it.
+#
+# Target-specific settings live in sdkconfig.defaults.esp32s3, which IDF reads
+# AFTER this file (so it wins on any key set in both).
+
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+
+CONFIG_COMPILER_CXX_EXCEPTIONS=n
+CONFIG_LOG_DEFAULT_LEVEL_INFO=y
+
+# Awake time is battery: the whole press-to-sleep cycle is ~100 ms of radio
+# plus however long the Controller takes to answer, so run at 160 MHz and get
+# back to sleep rather than saving microamps while awake.
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_160=y
+
+# 1 kHz tick, because this firmware times the button in single-digit
+# milliseconds and the default 100 Hz tick cannot express that. At 100 Hz one
+# tick is 10 ms, so pdMS_TO_TICKS(5) rounds to ZERO and vTaskDelay(0) does not
+# block at all. Measured on hardware 2026-07-28: the 5-sample x 5 ms debounce
+# actually sampled five times in a few microseconds and debounced nothing, and
+# button_wait_release() busy-spun the main task until the task watchdog reset
+# the chip -- which re-read the pin as still pressed and fired another press,
+# once every five seconds, forever.
+#
+# 🔴 sdkconfig.defaults is only consulted when sdkconfig does NOT exist. After
+# changing anything here, DELETE sdkconfig and rebuild, then grep the
+# regenerated sdkconfig to confirm the value actually landed.
+CONFIG_FREERTOS_HZ=1000
+
+# Boot faster: the classic ESP32 spends ~300 ms of every wake in the bootloader
+# otherwise, and that is pure battery.
+CONFIG_BOOTLOADER_LOG_LEVEL_WARN=y
+CONFIG_BOOTLOADER_SKIP_VALIDATE_IN_DEEP_SLEEP=y

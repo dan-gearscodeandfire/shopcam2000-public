@@ -34,7 +34,7 @@ class HookRunner:
         if not self._module:
             return []
         return [
-            name for name in ("on_record_start", "on_record_stop")
+            name for name in ("on_record_start", "on_record_stop", "on_twab_filed")
             if callable(getattr(self._module, name, None))
         ]
 
@@ -87,3 +87,17 @@ class HookRunner:
     def record_stop(self, cameras: list[str], clips: list[dict],
                     audio_matters: bool) -> None:
         self._fire("on_record_stop", list(cameras), list(clips), audio_matters)
+
+    def twab_filed(self, sort: dict) -> None:
+        """Fired once a TWAB press has been verified and filed into its folder.
+
+        ``sort`` is the summary ClipSorter returned - notably ``folder``, the
+        absolute path of the event folder, plus ``name``, ``kind``, ``files``
+        and ``bytes``.
+
+        This is the only hook on the press path. The take path has
+        ``on_record_stop``; a press never went through it, so anything that
+        should happen "when the button is pressed and the footage has landed"
+        belongs here.
+        """
+        self._fire("on_twab_filed", dict(sort))

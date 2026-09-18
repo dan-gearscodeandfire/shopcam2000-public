@@ -1,0 +1,66 @@
+// twab_bridge configuration — copy to bridge_config.h and fill in.
+// bridge_config.h is gitignored: THE REAL FILE MUST NEVER REACH THE PUBLIC REPO.
+//
+// This is the only board in the fleet that holds a WiFi credential. That is
+// the point of splitting the master off: the button and the ESP-NOW nodes can
+// be lost, stolen or handed to someone without leaking the shop network.
+#pragma once
+
+// ---- WiFi -------------------------------------------------------------------
+#define TWABR_WIFI_SSID       "your-ssid"
+#define TWABR_WIFI_PASSWORD   "your-password"
+
+// A static IP means the Controller (and you, at 3 a.m.) always know where the
+// bridge is, and reconnects after a router reboot don't wait on DHCP.
+#define TWABR_USE_STATIC_IP   1
+#define TWABR_STATIC_IP       "192.0.2.14"      // example: pick a free address on YOUR LAN
+#define TWABR_STATIC_GW       "192.0.2.1"       // your router
+#define TWABR_STATIC_MASK     "255.255.255.0"
+
+// ---- Shopcam 2000 Controller ------------------------------------------------
+// Port 8787, not 8000. The Controller has always served 8787 (config.toml
+// [server] port); 8000 was simply wrong here and every press would have failed.
+#define TWABR_SERVER_BASE     "http://192.0.2.10:8787"   // the Controller PC, port from config.toml [server]
+
+// Where each ESP-NOW message type lands. `press` is the one that matters: the
+// Controller fans it out to every overwatch camera's Blue Iris trigger, which
+// flushes the pre-roll buffer to disk.
+#define TWABR_PRESS_PATH      "/api/twab"
+#define TWABR_TELEMETRY_PATH  "/api/twab/telemetry"
+// Anything else (future light/sensor nodes) is POSTed to PREFIX + "/" + type,
+// e.g. /api/espnow/event. Unknown paths 404, which the bridge logs and drops.
+#define TWABR_GENERIC_PREFIX  "/api/espnow"
+
+// ---- OTA (this board only; ESP-NOW nodes are USB-flashed) -------------------
+#define TWABR_OTA_MANIFEST    "/firmware/twab_bridge/version.txt"
+#define TWABR_OTA_BINARY      "/firmware/twab_bridge/twab_bridge.bin"
+#define TWABR_OTA_CHECK_MIN   60     // minutes between checks (0 = boot only)
+
+// ---- UART link to the master ------------------------------------------------
+// Mirror of the master's pins: bridge TX -> master RX, bridge RX -> master TX,
+// and a shared ground.
+#define TWABR_UART_PORT       UART_NUM_2
+#define TWABR_UART_TX_GPIO    17
+#define TWABR_UART_RX_GPIO    16
+#define TWABR_UART_BAUD       115200
+
+// ---- Hardware ---------------------------------------------------------------
+#define TWABR_LED_GPIO        2      // -1 to disable
+
+// ---- Behaviour --------------------------------------------------------------
+#define TWABR_HTTP_RETRIES    3
+// Must comfortably exceed the Controller's worst case for /api/twab: it
+// triggers each overwatch camera in turn, and a slow Blue Iris (re-login, one
+// dead camera) takes several seconds even when the press succeeds. Timing out
+// early makes the bridge retry a press that worked.
+#define TWABR_HTTP_TIMEOUT_MS 8000
+#define TWABR_JOB_QUEUE_DEPTH 6
+#define TWABR_LINE_MAX        512
+#define TWABR_HEARTBEAT_MS    10000
+#define TWABR_MASTER_TIMEOUT_MS 30000
+
+// Tiny status/command HTTP server on the bridge (0 to disable). GET /status,
+// POST /cmd. This is the only way to see the link state without a serial
+// cable, and it is how the Controller will drive future ESP-NOW nodes.
+#define TWABR_STATUS_SERVER   1
+#define TWABR_STATUS_PORT     80

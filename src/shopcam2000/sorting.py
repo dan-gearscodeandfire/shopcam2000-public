@@ -38,9 +38,10 @@ import contextlib
 import json
 import logging
 import os
+import re
 import shutil
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -64,6 +65,42 @@ def _local_stamp(epoch: float) -> str:
     than as the next morning.
     """
     return datetime.fromtimestamp(epoch).strftime("%Y-%m-%d_%H-%M-%S")
+
+
+# Blue Iris clip names: camera, then the clip's trigger moment in UTC, then Z.
+CLIP_NAME_RE = re.compile(
+    r"^(?P<cam>[A-Za-z0-9_-]+)\.(?P<stamp>\d{8}_\d{6})Z(?P<ext>\.[A-Za-z0-9]+)$")
+
+
+def _local_clip_name(name: str, started_at: float | None = None) -> str:
+    """``CAM1.20260801_031952Z.mp4`` -> ``CAM1.20260731_231853.mp4``.
+
+    The sorted copy is named the way the operator thinks about it, in local
+    time, so a folder and the files inside it finally agree. Two deliberate
+    choices:
+
+    * **Local, not UTC.** The UTC token is why an evening press read as the next
+      morning. The folder was already local; the files were not, and the
+      mismatch was the whole complaint (user, 2026-07-31).
+    * **The clip's real START, not Blue Iris's token.** BI stamps the file with
+      the *trigger* moment, but the clip begins ~60 s earlier because of
+      pre-roll. ``started_at`` is Blue Iris's own record of when the file
+      actually opened, which is what the folder name already uses, so the two
+      now derive from the same instant.
+
+    Falls back to converting the UTC token when no start is known, and returns
+    unrecognised names untouched - a name this cannot parse is a name it must
+    not mangle.
+    """
+    m = CLIP_NAME_RE.match(name)
+    if not m:
+        return name
+    if started_at:
+        when = datetime.fromtimestamp(float(started_at))
+    else:
+        when = (datetime.strptime(m["stamp"], "%Y%m%d_%H%M%S")
+                .replace(tzinfo=timezone.utc).astimezone())
+    return f"{m['cam']}.{when.strftime('%Y%m%d_%H%M%S')}{m['ext']}"
 
 
 class ClipSorter:
@@ -174,7 +211,8 @@ class ClipSorter:
         for clip, src in sources:
             camera = str(clip.get("camera") or "?")
             try:
-                size = self._copy_one(src, dest / src.name)
+                filed = _local_clip_name(src.name, clip.get("date"))
+                size = self._copy_one(src, dest / filed)
             except FileNotFoundError:
                 # Blue Iris rotated it out from under us, or never wrote it.
                 failed[camera] = f"{src.name}: not on disk"
@@ -187,7 +225,10 @@ class ClipSorter:
             msec = clip.get("msec")
             copied.append({
                 "camera": camera,
-                "file": src.name,
+                "file": filed,
+                # The Blue Iris original keeps its UTC name in the flat
+                # clip dir; this is the thread back to it and to BI's DB.
+                "sourceFile": src.name,
                 "bytes": size,
                 "startedAt": clip.get("date"),
                 # The press path measures duration with ffprobe; the take path

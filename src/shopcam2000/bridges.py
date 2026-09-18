@@ -124,11 +124,16 @@ class BridgeSwitch:
 
     # ---------------------------------------------------------------- writing
 
-    def _write(self, wanted: dict[str, bool]) -> None:
+    def _write(self, wanted: dict[str, bool], by: str = "controller") -> None:
         payload = {
             "version": 1,
             "updated": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "by": "controller",
+            # WHO asked, not just that someone did. Since the idle clock was
+            # added there is more than one answer, and "why is CAM5 off?" has to
+            # be answerable from the file itself - an encoder that is off for an
+            # unexplained reason is indistinguishable from a broken one.
+            # "controller" = a human at the UI. "idle-timer" = the clock.
+            "by": by,
             # Written for whoever opens this file at the machine, which is the
             # only place it can be opened - the note is the interface.
             "note": ("Desired state for the ffmpeg bridges. supervisor.ps1 reads "
@@ -147,18 +152,19 @@ class BridgeSwitch:
         os.replace(tmp, self.path)
         self._cache = None
 
-    def set(self, bridge_id: str, on: bool) -> dict[str, bool]:
+    def set(self, bridge_id: str, on: bool, by: str = "controller") -> dict[str, bool]:
         if bridge_id not in self.map:
             raise KeyError(bridge_id)
         with self._lock:
             wanted = self.desired()
             wanted[bridge_id] = bool(on)
-            self._write(wanted)
+            self._write(wanted, by)
             self._pending[bridge_id] = time.monotonic() + SETTLE_SECONDS
-        log.info("bridge %s -> %s", bridge_id, "ON" if on else "OFF")
+        log.info("bridge %s -> %s (%s)", bridge_id, "ON" if on else "OFF", by)
         return wanted
 
-    def set_many(self, bridge_ids: list[str], on: bool) -> list[str]:
+    def set_many(self, bridge_ids: list[str], on: bool,
+                 by: str = "controller") -> list[str]:
         """Set several at once, in ONE write. Returns the ones that changed.
 
         One write, not one per bridge: the supervisor wakes on the file's
@@ -175,20 +181,21 @@ class BridgeSwitch:
                 return []
             for bridge_id in changed:
                 wanted[bridge_id] = bool(on)
-            self._write(wanted)
+            self._write(wanted, by)
             deadline = time.monotonic() + SETTLE_SECONDS
             for bridge_id in changed:
                 self._pending[bridge_id] = deadline
-        log.info("bridges %s -> %s", ", ".join(changed), "ON" if on else "OFF")
+        log.info("bridges %s -> %s (%s)", ", ".join(changed),
+                 "ON" if on else "OFF", by)
         return changed
 
-    def set_all(self, on: bool) -> dict[str, bool]:
+    def set_all(self, on: bool, by: str = "controller") -> dict[str, bool]:
         with self._lock:
             wanted = {bridge_id: bool(on) for bridge_id in self.map}
-            self._write(wanted)
+            self._write(wanted, by)
             deadline = time.monotonic() + SETTLE_SECONDS
             self._pending = {bridge_id: deadline for bridge_id in self.map}
-        log.info("all bridges -> %s", "ON" if on else "OFF")
+        log.info("all bridges -> %s (%s)", "ON" if on else "OFF", by)
         return wanted
 
     # ------------------------------------------------------------------ views

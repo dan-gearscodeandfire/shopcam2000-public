@@ -1,0 +1,46 @@
+// TWAB configuration — copy to twab_config.h and fill in.
+// twab_config.h is gitignored: THE REAL FILE MUST NEVER REACH THE PUBLIC REPO.
+#pragma once
+
+// ---- WiFi ------------------------------------------------------------------
+#define TWAB_WIFI_SSID        "your-ssid"
+#define TWAB_WIFI_PASSWORD    "your-password"
+
+// Static IP shaves ~1s of DHCP off every button press. Leave USE_STATIC_IP 0
+// to use DHCP.
+#define TWAB_USE_STATIC_IP    1
+#define TWAB_STATIC_IP        "192.0.2.13"      // example: pick a free address on YOUR LAN
+#define TWAB_STATIC_GW        "192.0.2.1"       // your router
+#define TWAB_STATIC_MASK      "255.255.255.0"
+
+// ---- Server (the PC running the Shopcam 2000 Controller) -------------------
+// Port 8787, not 8000. The Controller has always served 8787 (config.toml
+// [server] port); 8000 was simply wrong here and every press would have failed.
+#define TWAB_SERVER_BASE      "http://192.0.2.10:8787"   // the Controller PC, port from config.toml [server]
+#define TWAB_PRESS_PATH       "/api/twab"            // POST on button press
+#define TWAB_TELEMETRY_PATH   "/api/twab/telemetry"  // POST on heartbeat wake
+#define TWAB_OTA_MANIFEST     "/firmware/twab/version.txt" // plain-text version
+#define TWAB_OTA_BINARY       "/firmware/twab/twab.bin"
+
+// ---- Hardware --------------------------------------------------------------
+// Button between GPIO and 3V3, 100k pulldown to GND. Must be an RTC GPIO
+// (0,2,4,12-15,25-27,32-39) for EXT1 deep-sleep wake.
+#define TWAB_BUTTON_GPIO      GPIO_NUM_33
+// Optional status LED (-1 to disable).
+#define TWAB_LED_GPIO         GPIO_NUM_2
+// Optional battery sense via divider into an ADC1 pin (-1 to disable).
+// vbat_mv = raw_mv * TWAB_VBAT_DIVIDER.
+#define TWAB_VBAT_ADC_GPIO    GPIO_NUM_34
+#define TWAB_VBAT_DIVIDER     2.0f
+
+// ---- Behaviour -------------------------------------------------------------
+#define TWAB_LONG_PRESS_MS    3000   // hold this long at wake -> maintenance mode
+#define TWAB_MAINT_WINDOW_S   600    // maintenance mode duration (OTA window)
+#define TWAB_HEARTBEAT_HOURS  6      // timer wake: telemetry + OTA check
+#define TWAB_HTTP_RETRIES     3
+// Must comfortably exceed the server's worst case for /api/twab — the
+// Controller triggers each overwatch camera in turn, and a slow Blue Iris
+// (re-login, one dead camera) can take several seconds even when the press
+// succeeds. Timing out early makes the button retry a press that worked.
+#define TWAB_HTTP_TIMEOUT_MS  8000
+#define TWAB_UDP_LOG_PORT     5514   // UDP log mirror -> TWAB_SERVER host
