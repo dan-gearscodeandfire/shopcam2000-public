@@ -1,4 +1,4 @@
-# CAM8 — Top-down bench cam. With CAM5 this pair carries ~80% of all footage, and its face-on view makes it the best chart target on the rig.
+# CAM8 - Top-down bench cam. With CAM5 this pair carries ~80% of all footage, and its face-on view makes it the best chart target on the rig.
 
 > **This file is the source of truth for CAM8.** Machine values below are diffed
 > against the live camera by `python tools/calibrate.py check`. Prose is here
@@ -6,13 +6,13 @@
 
 - **Transport:** DirectShow ProcAmp (UVC), --device 'USB'  (Exposure lives on camctrl, not procamp)
 - **Locked:** no
-- **Clip ceiling:** **241** — a patch reaching this is VOID
+- **Clip ceiling:** **241** - a patch reaching this is VOID
 - **Settle after a write:** 28.0 s
 
-## Exposed parameters — and how each range is KNOWN
+## Exposed parameters - and how each range is KNOWN
 
 `probed` = written until it refused. `device` = the device reported it.
-🔴 **`assumed` = NOT VERIFIED. Treat an assumed range as a task, not a fact** —
+🔴 **`assumed` = NOT VERIFIED. Treat an assumed range as a task, not a fact** -
 this fleet has burned sessions on assumed ranges, and `drivers.capabilities()`
 still reports every Dahua knob as 0–100, which is false for Gamma.
 
@@ -33,7 +33,7 @@ still reports every Dahua knob as 0–100, which is false for Gamma.
 
 _None known._ Absence of a known-dead knob is not proof one works.
 
-## What is TRUE about this camera — measured, not assumed
+## What is TRUE about this camera - measured, not assumed
 
 - CLIP CEILING 241, NOT 255. Measured 2026-08-07: at Exposure -6 and -5 the chart's white patch pegs at 241 and reads sd 0.00 with R/G = B/G = 1.0000 -- a flawless FAKE neutral white balance. Scoring colour there would declare a blown-out camera perfectly balanced.
 - GAMMA 100 MEANS GAMMA 1.0 on this camera's 72-500 scale, and its transfer measured NEAR-LINEAR off the DGK chart's grey ramps (8 steps 10-14 code values apart; the two opposing ramps agreeing to +/-2 on 7 of 8). THE GAMMA WAS NEVER THE PROBLEM.
@@ -50,7 +50,7 @@ _None known._ Absence of a known-dead knob is not proof one works.
 
 - A white-balance re-check AT Exposure -7 is owed: the 3540 pick was made at -8, and at -7 the ratios read R/G 0.950 / B/G 0.998, which is essentially neutral but leaves green fractionally on top (0.002). Below visibility, inside the measurement spread, but not confirmed.
 
-## Last known good — the diff target
+## Last known good - the diff target
 
 Copied verbatim from `BASELINE-2026-08-07-pm.json`. Re-seed with
 `python tools/calibrate.py reseed --camera CAM8` after a deliberate change,
@@ -165,13 +165,13 @@ and record why in the history below.
 }
 ```
 
-## Validation history — APPEND ONLY, never overwrite
+## Validation history - APPEND ONLY, never overwrite
 
 The user's standing rule. "Looked at it and kept it" is the evidence that a
 value is still trusted, and it is lost if each entry replaces the last.
 
-- **2026-07-26** — auto-WB beat manual by eye, twice. ⚠️ **In the pre-07-29 room.**
-- **2026-08-07** — re-swept 2800–6500 up+down after the relight; **manual 3540 wins on both axes**. Exposure −7 from a −11..−5 up+down sweep. User: **"CAM8 looks great."**
+- **2026-07-26** - auto-WB beat manual by eye, twice. ⚠️ **In the pre-07-29 room.**
+- **2026-08-07** - re-swept 2800–6500 up+down after the relight; **manual 3540 wins on both axes**. Exposure −7 from a −11..−5 up+down sweep. User: **"CAM8 looks great."**
 
 ### 2026-08-31 - MEASURED on the chart, and the driver gap CLOSED. No camera write.
 

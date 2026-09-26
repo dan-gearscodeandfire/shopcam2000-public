@@ -1,8 +1,8 @@
-# TWAB — the "That Was Awesome" button
+# TWAB - the "That Was Awesome" button
 
 A battery-powered ESP32 that lives in deep sleep. Press it and it wakes, joins
 WiFi, tells the Shopcam 2000 Controller to save the last minute from every
-**overwatch** camera (the per-camera "Watch" toggle in the Controller UI —
+**overwatch** camera (the per-camera "Watch" toggle in the Controller UI -
 independent of arming), and goes back to sleep. Designed for the world where
 overwatch cameras hold a 1-minute pre-trigger buffer in Blue Iris (Mode B in
 `docs/` / the vault's `blue-iris-two-mode-recording-setup`).
@@ -21,18 +21,18 @@ the monitor.
 
 ## Server contract (implemented in `server.py`)
 
-- `POST /api/twab` — save-the-moment. Fires the Blue Iris `trigger` command
+- `POST /api/twab` - save-the-moment. Fires the Blue Iris `trigger` command
   on every **overwatch** camera (flushes each 60 s pre-roll into a clip;
   Break time = post-roll) and logs the telemetry body. Status codes are the
   firmware's contract: **200** = at least one camera triggered (including
-  partial failure — retrying would re-trigger the cameras that saved; the
+  partial failure - retrying would re-trigger the cameras that saved; the
   body's `failures` map tells the truth); **409** = no overwatch cameras
-  selected (config state — the firmware treats 4xx as final, no retry);
+  selected (config state - the firmware treats 4xx as final, no retry);
   **502** = cameras selected but nothing triggered (safe to retry).
-- `POST /api/twab/telemetry` — log-only heartbeat. 200 = success.
-- `GET /firmware/twab/version.txt` — plain-text version string (e.g. `1.0.1`).
+- `POST /api/twab/telemetry` - log-only heartbeat. 200 = success.
+- `GET /firmware/twab/version.txt` - plain-text version string (e.g. `1.0.1`).
   Compared against the running image's `esp_app_desc` version.
-- `GET /firmware/twab/twab.bin` — the OTA binary (must be signed; see
+- `GET /firmware/twab/twab.bin` - the OTA binary (must be signed; see
   Build). The server serves `/firmware/*` from `var/firmware/`, so
   publishing an update = dropping both files in `var/firmware/twab/`.
 
@@ -78,13 +78,13 @@ foreign-signed binary is rejected.
 
 - **UDP log mirror**: while awake, all `esp_log` output is also sent to the
   server host, UDP port 5514. Listen with `nc -ul 5514` (or a tiny listener in
-  the Controller). Deep sleep means there is nothing to connect to otherwise —
+  the Controller). Deep sleep means there is nothing to connect to otherwise -
   the device is off between presses.
 - **Telemetry counters**: `boot_count`/`press_count`/`fail_count` live in RTC
   RAM and survive sleep (reset on power loss). A rising `fail_count` with a
   healthy server means WiFi trouble; presses with no server log entry mean the
   press never left the device.
-- **OTA rollback**: `CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE` — a new image must
+- **OTA rollback**: `CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE` - a new image must
   complete one successful POST before it's marked valid; otherwise the
   bootloader falls back to the previous slot on reboot. A bad OTA cannot brick
   the button.
@@ -92,7 +92,7 @@ foreign-signed binary is rejected.
 ## Design notes
 
 - Static IP by default: DHCP costs ~1 s of battery every press.
-- WiFi config kept in RAM (`WIFI_STORAGE_RAM`) — no NVS flash wear per wake.
+- WiFi config kept in RAM (`WIFI_STORAGE_RAM`) - no NVS flash wear per wake.
 - The h264/mjpeg/NVENC bridge work is unrelated to this device; TWAB only ever
   speaks HTTP to the Controller, never to Blue Iris directly, so BI credentials
   stay off the microcontroller.

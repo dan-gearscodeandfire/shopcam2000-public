@@ -15,19 +15,19 @@ feature simply does not work on your phone.
 
 The rule: only **`https://`** and **`localhost`** are *secure contexts*. On the
 machine running the Controller, `http://localhost:8787` is fine and everything
-works — which is exactly why this is so easy to miss. From your phone, the same
+works - which is exactly why this is so easy to miss. From your phone, the same
 server over `http://192.168.x.x:8787` is not.
 
 `shopcam doctor` reports this, and Settings › About in the UI reports which case
 **that particular device** is in.
 
-## Fix 1 — the Chrome flag (two minutes, per device)
+## Fix 1 - the Chrome flag (two minutes, per device)
 
 Good enough for a private workshop LAN and a phone you own.
 
 1. On the phone, open `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
 2. Paste your origin into the text box: `http://192.168.1.50:8787`
-   (exact scheme, host and port — no trailing slash)
+   (exact scheme, host and port - no trailing slash)
 3. Set the dropdown to **Enabled**, then **Relaunch**
 4. Load the Controller → menu → **Install app**
 
@@ -37,9 +37,9 @@ You now get an icon in the launcher, no URL bar, and a screen that stays awake.
 unauthenticated origin. Only do it for an address on a network you control, and
 never for a public one.
 
-## Fix 2 — actually serve TLS (the right answer for anyone else)
+## Fix 2 - actually serve TLS (the right answer for anyone else)
 
-A self-signed certificate **is not enough on its own** — Chrome treats a
+A self-signed certificate **is not enough on its own** - Chrome treats a
 cert-error origin as insecure too, so you get none of the features back. The
 certificate has to be genuinely trusted by the device.
 

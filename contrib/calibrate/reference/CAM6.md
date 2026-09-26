@@ -1,4 +1,4 @@
-# CAM6 — The roamer. No fixed position, no calibration slot.
+# CAM6 - The roamer. No fixed position, no calibration slot.
 
 > **This file is the source of truth for CAM6.** Machine values below are diffed
 > against the live camera by `python tools/calibrate.py check`. Prose is here
@@ -6,13 +6,13 @@
 
 - **Transport:** Foscam CGI :88
 - **Locked:** no
-- **Clip ceiling:** 🔴 UNMEASURED — go measure it, never assume 255
+- **Clip ceiling:** 🔴 UNMEASURED - go measure it, never assume 255
 - **Settle after a write:** 20.0 s
 
-## Exposed parameters — and how each range is KNOWN
+## Exposed parameters - and how each range is KNOWN
 
 `probed` = written until it refused. `device` = the device reported it.
-🔴 **`assumed` = NOT VERIFIED. Treat an assumed range as a task, not a fact** —
+🔴 **`assumed` = NOT VERIFIED. Treat an assumed range as a task, not a fact** -
 this fleet has burned sessions on assumed ranges, and `drivers.capabilities()`
 still reports every Dahua knob as 0–100, which is false for Gamma.
 
@@ -28,7 +28,7 @@ still reports every Dahua knob as 0–100, which is false for Gamma.
 
 _None known._ Absence of a known-dead knob is not proof one works.
 
-## What is TRUE about this camera — measured, not assumed
+## What is TRUE about this camera - measured, not assumed
 
 - ITS CGI ZEROES A KNOB ON A WRONG PARAMETER NAME AND REPORTS SUCCESS. `setBrightness&value=58` returns result=0 and sets brightness to 0, because the expected `brightness` param was absent and defaulted. That is how this camera ended up parked on contrast 0 while every response said ok. Only a re-read after every write catches it.
 - `setContrast` expects the parameter spelled `constrast` -- a TYPO IN THE CAMERA'S OWN FIRMWARE. Spelled correctly it returns result=0 and does nothing.
@@ -40,7 +40,7 @@ _None known._ Absence of a known-dead knob is not proof one works.
 
 - Its clip ceiling is UNMEASURED.
 
-## Last known good — the diff target
+## Last known good - the diff target
 
 Copied verbatim from `BASELINE-2026-08-07-pm.json`. Re-seed with
 `python tools/calibrate.py reseed --camera CAM6` after a deliberate change,
@@ -85,10 +85,10 @@ and record why in the history below.
 }
 ```
 
-## Validation history — APPEND ONLY, never overwrite
+## Validation history - APPEND ONLY, never overwrite
 
 The user's standing rule. "Looked at it and kept it" is the evidence that a
 value is still trusted, and it is lost if each entry replaces the last.
 
-- **2026-07-26** — grayscale fix confirmed by eye.
+- **2026-07-26** - grayscale fix confirmed by eye.
 

@@ -28,7 +28,7 @@ audio-only source has none, so a supervisor decides the source is dead and
 restarts it every cycle, for ever.
 
 Give it a synthetic video track and every existing tool works **unmodified**.
-That is the whole trick, and it is worth more than it sounds: you do not have to
+That is the trick, and it saves more work than it sounds: you do not have to
 special-case the microphone anywhere else in your stack.
 
 ### ⚠️ Make it a waveform, not a black rectangle
@@ -36,7 +36,7 @@ special-case the microphone anywhere else in your stack.
 The obvious synthetic track is a black frame. Do not.
 
 `showwaves` **on true silence draws nothing at all.** The first frame pulled off
-the reference rig's mic bridge was pure black — which is *exactly what a dead
+the reference rig's mic bridge was pure black - which is *exactly what a dead
 camera looks like* in the recorder's grid. You have built an indicator that
 cannot distinguish "quiet" from "broken".
 
@@ -130,7 +130,7 @@ old adapter, it cannot be opened twice, so a second capture of it fails.)
 ## 5. Mono, but check first
 
 USB audio adapters routinely present **stereo where both channels are
-identical** — duplicated mono. If so, `-ac 1` is lossless, not a 6 dB giveaway,
+identical** - duplicated mono. If so, `-ac 1` is lossless, not a 6 dB giveaway,
 and halves your bitrate for nothing.
 
 **Verify before assuming.** On a genuinely stereo source, `-ac 1` discards half
@@ -142,12 +142,12 @@ ffmpeg -i test.wav -af "channelsplit,astats" -f null -
 
 Identical RMS on both channels at the same instant means duplicated mono.
 
-Use a higher bitrate than the cameras get — 192k against their 128k. This is the
+Use a higher bitrate than the cameras get - 192k against their 128k. This is the
 primary voice track and the bitrate is free next to any picture.
 
 ## 6. Do not expect it to be in sync
 
 It will not be. See [sync.md](sync.md). Independent sources land up to ~0.44 s
 apart, consistently, and that is a constraint to work with rather than a bug to
-chase. Sync by waveform in your editor — which is another reason to keep scratch
-audio on the cameras as well, even though the lav is the real track.
+chase. Sync by waveform in your editor - which is another reason to keep scratch
+audio on the cameras as well, even though the lav is the track you use.

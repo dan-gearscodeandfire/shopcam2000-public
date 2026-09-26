@@ -1,7 +1,7 @@
 # Calibration: making nine cameras look like one shop
 
 Cutting between angles that do not match is the fastest way to make a
-multi-camera edit look cheap. The goal is not "good colour" — it is **the same
+multi-camera edit look cheap. The goal is not "good colour" - it is **the same
 colour**, so a cut does not jump.
 
 Method: pick one camera as the reference, make it as good as it can be, then
@@ -14,8 +14,8 @@ The finding that cost the most, and the one most likely to bite you.
 UVC/ProcAmp exposes white balance as a single "temperature" slider. It is not one
 axis. **It moves R/G and B/G at different rates and in opposite directions.**
 
-So if you build a servo that optimises a single-axis objective — "get R/G to
-1.0" — it will happily converge, report success, and **wreck the blue channel on
+So if you build a servo that optimises a single-axis objective - "get R/G to
+1.0" - it will happily converge, report success, and **wreck the blue channel on
 the way**. It is not broken; it did what you asked. You asked the wrong thing.
 
 **Score both axes, always.** An objective that cannot see B/G cannot be trusted
@@ -36,7 +36,7 @@ cheerfully echo what you wrote whether or not it applied it.
 ## Order of operations
 
 1. **Fix the room first.** ⚠️ If exposure doubles and a colour cast vanishes with
-   settings untouched, **the room changed** — someone opened a door, the sun
+   settings untouched, **the room changed** - someone opened a door, the sun
    moved, a lamp got bumped. Check that before tracing the pipeline. It will cost
    you an evening otherwise.
 2. **Reference camera.** Best exposure, WB and sharpness you can get. Freeze it
@@ -48,10 +48,10 @@ cheerfully echo what you wrote whether or not it applied it.
 ## Know when to stop
 
 At some point the camera side is exhausted and the remaining difference belongs
-in the **edit**, as a per-camera gain in your NLE. That is not defeat — it is
+in the **edit**, as a per-camera gain in your NLE. That is not defeat - it is
 cheaper, more precise, and reversible.
 
-Two things worth checking before you give up on the pipeline:
+Check two things before you give up on the pipeline:
 
 - **Range signalling.** A camera flagged limited-range but producing full-range
   data will look washed out until you tell your NLE to interpret it as full.
@@ -79,7 +79,7 @@ produced.
 
 The code is written against this rig's eight cameras and five control
 protocols, so expect to edit the camera table before it is useful on yours. The
-reference files are worth reading either way: they are a record of which
+reference files are useful either way: they are a record of which
 settings on common Amcrest, OBSBOT, XiongMai and Foscam cameras do what the
 label says, and which do not. See the toolkit's own
 [README](../contrib/calibrate/README.md) for what each file does.

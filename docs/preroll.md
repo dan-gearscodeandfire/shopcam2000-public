@@ -4,7 +4,7 @@
 minute exists because the recorder holds a rolling pre-trigger buffer in RAM.
 
 The thing everybody gets wrong: **that buffer refills in real time.** It is not a
-setting that is either on or off — it is a bucket, and a press empties it.
+setting that is either on or off - it is a bucket, and a press empties it.
 
 ## The consequence
 
@@ -23,7 +23,7 @@ seconds**. Leave about a minute between presses if you want a full lead-in.
 
 🔑 The UI reports this rather than hiding it. A press that caught 1.2 s of
 lead-in and a press that caught 60 s both put the moment on disk, and reporting
-both as an identical green "saved" is true and useless — the difference is
+both as an identical green "saved" is true and useless - the difference is
 whether you have anything before the moment. It says "saved, but with only 1.2 s
 of lead-in", which is the difference between someone who waits a few seconds
 before pressing again and someone who finds out in the edit.

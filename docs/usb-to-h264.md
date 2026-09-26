@@ -34,10 +34,10 @@ Python process.
 
 ## 🔑 Four findings, each of which cost an evening
 
-### 1. `-pix_fmt` is load-bearing, and the bug it causes is invisible to testing
+### 1. `-pix_fmt` must be pinned, and the bug it causes is invisible to testing
 
 Left unset, ffmpeg picks a pixel format per source. On the reference rig it chose
-**yuvj444p** for one camera and **yuvj420p** for another — both perfectly valid
+**yuvj444p** for one camera and **yuvj420p** for another - both perfectly valid
 H.264.
 
 Blue Iris decodes 4:4:4 differently. That camera rendered **5.76 percentage
@@ -100,7 +100,7 @@ The exact scripts the rig runs are in [`contrib/windows/bridge/`](../contrib/win
 ### 3. Try the MJPEG pin before the H.264 pin
 
 Many UVC cameras advertise a native H.264 pin. On some hosts it delivers **zero
-frames**, silently — ffmpeg sits there and nothing happens.
+frames**, silently - ffmpeg sits there and nothing happens.
 
 Take MJPEG in and re-encode to H.264. It costs CPU you have and it works.
 `shopcam encode` defaults to `-vcodec mjpeg` for this reason; `--input-codec ""`
@@ -110,7 +110,7 @@ leaves the choice to ffmpeg.
 
 The device name is passed straight through. On Windows it must match **exactly**,
 including case and punctuation. The name in Device Manager is frequently not the
-name DirectShow uses. `shopcam encode --list` prints ffmpeg's own spelling —
+name DirectShow uses. `shopcam encode --list` prints ffmpeg's own spelling -
 copy from there.
 
 > Enumeration exits non-zero and prints to stderr **by design** (there is no
@@ -121,7 +121,7 @@ copy from there.
 ## Switching them off
 
 Encoders run whether or not anyone is filming. The Controller can switch them per
-camera, but it **never starts or stops a process** — it writes desired state to a
+camera, but it **never starts or stops a process** - it writes desired state to a
 file and a supervisor reconciles.
 
 Kill a bridge directly and the supervisor restarts it within its poll interval

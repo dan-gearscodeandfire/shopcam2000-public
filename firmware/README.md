@@ -1,4 +1,4 @@
-# Shop firmware — the TWAB fleet
+# Shop firmware - the TWAB fleet
 
 ## Where your own values go (read this first)
 
@@ -7,8 +7,8 @@ tree needs editing to get a working button.
 
 | File | What you enter | Where it comes from |
 |---|---|---|
-| `common/twab_secrets.h` (copy from `.example`) | `TWAB_LINK_KEY_HEX` — the shared HMAC key; `TWAB_ESPNOW_CHANNEL` | `python -c "import secrets; print(secrets.token_hex(32))"`; a channel at least 5 away from your WiFi AP's |
-| `twab_button/main/button_config.h` | **`TWABB_MASTER_MAC`** — the master's MAC address | Printed on the master's serial console at boot: `==== twab master … MAC xx:xx:xx:xx:xx:xx …` |
+| `common/twab_secrets.h` (copy from `.example`) | `TWAB_LINK_KEY_HEX` - the shared HMAC key; `TWAB_ESPNOW_CHANNEL` | `python -c "import secrets; print(secrets.token_hex(32))"`; a channel at least 5 away from your WiFi AP's |
+| `twab_button/main/button_config.h` | **`TWABB_MASTER_MAC`** - the master's MAC address | Printed on the master's serial console at boot: `==== twab master … MAC xx:xx:xx:xx:xx:xx …` |
 | `twab_bridge/main/bridge_config.h` (copy from `.example`) | WiFi SSID + password, the bridge's static IP, and the Controller's `http://<ip>:8787` | Your network |
 
 **Order matters:** build and flash the **master** first (it needs only the
@@ -51,25 +51,25 @@ original single-chip button, kept because it still works.
 
 | Project | Board | Role |
 |---|---|---|
-| `twab_button/` | **XIAO ESP32S3**, battery | ESP-NOW node. Debounced GPIO, deep sleep, two-stage LED feedback. Still builds for the original ESP32 devkit — see below. |
+| `twab_button/` | **XIAO ESP32S3**, battery | ESP-NOW node. Debounced GPIO, deep sleep, two-stage LED feedback. Still builds for the original ESP32 devkit - see below. |
 | `twab_master/` | ESP32, mains | ESP-NOW receiver for the whole shop. No WiFi, no credentials. UART to the bridge. |
 | `twab_bridge/` | ESP32, mains | WiFi client. UART from the master, HTTP to the Controller. **The only OTA-capable board.** |
-| `common/twab_link/` | — | Shared wire format + HMAC auth. Built into the master and every node. |
+| `common/twab_link/` | - | Shared wire format + HMAC auth. Built into the master and every node. |
 | `twab/` | ESP32, battery | The original one-chip button (WiFi + HTTP directly). Superseded by the three above, still functional. |
 
 ## Why three boards instead of one
 
 ESP-NOW and station mode share a single radio, and a station is pinned to its
 AP's channel. Doing both on one chip means every ESP-NOW node has to track the
-AP's channel — including after a router reboot picks a different one. That is
-the failure mode where the button works for a month and then quietly doesn't,
-which is the worst possible behaviour for a device whose entire job is "catch
+AP's channel - including after a router reboot picks a different one. That is
+the failure mode where the button works for a month and then silently stops,
+which is the worst possible behaviour for a device whose job is "catch
 the thing that just happened".
 
 Splitting them costs one $4 board and buys:
 
 - the ESP-NOW side owns a **fixed channel forever**, and nothing renegotiates it;
-- the button and every future node hold **no WiFi credential** — the bridge is
+- the button and every future node hold **no WiFi credential** - the bridge is
   the only board on the LAN;
 - press-to-trigger latency has no WiFi association in it (~10 ms of radio
   instead of 1–3 s of DHCP and DHCP-adjacent sadness);
@@ -95,12 +95,12 @@ node**. A node built with a different key is invisible: its frames fail the HMAC
 check and the master logs `frame failed auth`. That is the first thing to check
 when a new board "doesn't work".
 
-Pick `TWAB_ESPNOW_CHANNEL` in the same file — at least 5 away from the shop AP's
+Pick `TWAB_ESPNOW_CHANNEL` in the same file - at least 5 away from the shop AP's
 channel (AP on 6 → use 1 or 11). The master and the bridge sit next to each
 other with two live radios; same-channel puts ESP-NOW into contention with all
 the LAN traffic and adjacent-channel is worse than either.
 
-### 1. Master (flash first — you need its MAC)
+### 1. Master (flash first - you need its MAC)
 
 ```powershell
 cd firmware\twab_master
@@ -130,29 +130,29 @@ idf.py -p COMx flash monitor
 
 🔴 **Delete `sdkconfig` when you change target or touch `sdkconfig.defaults`.**
 It is only consulted when `sdkconfig` does not exist, so otherwise you keep the
-previous board's config — including `CONFIG_FREERTOS_HZ`, which is what made the
+previous board's config - including `CONFIG_FREERTOS_HZ`, which is what made the
 debounce silently stop debouncing on 2026-07-28. Confirm afterwards:
 
 ```powershell
 Select-String sdkconfig -Pattern '^CONFIG_FREERTOS_HZ=|^CONFIG_IDF_TARGET='
 ```
 
-⚠️ **The XIAO has no onboard antenna** — only the U.FL connector at the end
+⚠️ **The XIAO has no onboard antenna** - only the U.FL connector at the end
 opposite the USB-C, and the antenna ships loose in the box. Unplugged, ESP-NOW
 range collapses and it presents as the four-fast-blink "master down" pattern.
 Plug it in before you conclude anything about the link.
 
-⚠️ **The XIAO's USB console is the chip itself** — no CP2102. Deep sleep makes
+⚠️ **The XIAO's USB console is the chip itself** - no CP2102. Deep sleep makes
 the COM port vanish and re-enumerate on every wake, so `idf.py monitor` drops
 each cycle. Bench with `TWABB_DEEP_SLEEP 0`. If flashing ever fails outright,
 hold `B` (BOOT) and tap `R` (RESET) to force download mode.
 
-Leaving `TWABB_MASTER_MAC` at all-zeros runs in broadcast mode. It works — it's
-the right setting for a first power-up — but broadcast gets no link-layer
+Leaving `TWABB_MASTER_MAC` at all-zeros runs in broadcast mode. It works - it's
+the right setting for a first power-up - but broadcast gets no link-layer
 retries and no delivery callback, so set the MAC before the button goes on a
 wall.
 
-A new board means a new MAC and so a new node id — the master registers it on
+A new board means a new MAC and so a new node id - the master registers it on
 its first authenticated frame with no pairing step, so nothing needs changing on
 the master or the bridge.
 
@@ -178,7 +178,7 @@ ladder.
 
 ## Wiring
 
-**Button** (XIAO ESP32S3) — two wires and nothing else:
+**Button** (XIAO ESP32S3) - two wires and nothing else:
 
 ```
 D0 (GPIO 1) ──── momentary switch ──── GND
@@ -186,18 +186,18 @@ D0 (GPIO 1) ──── momentary switch ──── GND
 
 Internal pull-up, active low. No external resistor, no debounce cap; debounce is
 5 samples × 5 ms in software. The internal pull-up is ~45 kΩ and loosely
-specified (30–80 kΩ) — fine on a short run; if a long cable to a wall button
+specified (30–80 kΩ) - fine on a short run; if a long cable to a wall button
 starts producing phantom wakes, an external 10 kΩ to 3V3 stops it.
 
-**LED** — `D1 (GPIO 2) ──── LED (long leg) ──── 330 Ω ──── GND`, active high.
+**LED** - `D1 (GPIO 2) ──── LED (long leg) ──── 330 Ω ──── GND`, active high.
 The onboard user LED is GPIO 21 and is **active low**; it needs no wiring and is
 the easy choice for bench work.
 
-**Battery** — a 1S LiPo on the `B+` / `B−` pads on the underside. Onboard charge
+**Battery** - a 1S LiPo on the `B+` / `B−` pads on the underside. Onboard charge
 management (50 mA fast / 3.8 mA trickle) tops it up whenever USB-C is connected.
 Solder a JST pigtail rather than the cell directly: the cell is always live, the
 two pads are adjacent, and you will want it disconnectable for current
-measurements. Use a **protected** cell — the charge IC manages charging, not
+measurements. Use a **protected** cell - the charge IC manages charging, not
 over-discharge.
 
 Pin constraints if you move any of this: deep-sleep wake needs an RTC GPIO,
@@ -207,7 +207,7 @@ brought out to a pad. ADC1 is GPIO 1–10; ADC2 is unusable while WiFi is up.
 
 There is **no battery-sense divider** on the XIAO and no net brought out for
 one, so `TWABB_VBAT_ADC_GPIO` is `-1` and telemetry reports `vbat_mv: -1`. To
-get a real reading, wire a divider into `D3` (GPIO 4, ADC1_CH3) and set it —
+get a real reading, wire a divider into `D3` (GPIO 4, ADC1_CH3) and set it -
 sized for microamps, because a 2×100 kΩ divider draws 18 µA, more than this
 board's entire deep-sleep budget.
 
@@ -215,7 +215,7 @@ board's entire deep-sleep budget.
 on GPIO 2. RTC-capable pins there are 0, 2, 4, 12–15, 25–27, 32–39; avoid GPIO
 12, a strapping pin that sets 1.8 V flash if held low at boot.)*
 
-**Master ↔ bridge** — cross the UART and share a ground:
+**Master ↔ bridge** - cross the UART and share a ground:
 
 ```
 master TX (GPIO 17) ───── RX (GPIO 16) bridge
@@ -225,32 +225,32 @@ master GND          ───── GND          bridge
 
 The shared ground is not optional. Without it the link works on the bench (both
 boards grounded through the same laptop) and fails the moment they're on
-separate supplies — which is the kind of bug that eats an evening.
+separate supplies - which is the kind of bug that eats an evening.
 
 ## What the LED says
 
-The button's LED is the whole user interface:
+The button's LED is its only user interface:
 
 | Pattern | Meaning |
 |---|---|
 | 1 short blink | Master heard the press. |
 | 1 long solid (~0.6 s) | **Saved.** The Controller triggered Blue Iris. |
 | 2 medium blinks | Master heard it, but the save failed or never came back. |
-| 4 fast blinks | Nobody answered — master down, out of range, or wrong key. |
+| 4 fast blinks | Nobody answered - master down, out of range, or wrong key. |
 | 3 blinks after a 3 s hold | Long-press announce (HELLO) acked. Use it to prove range from a new spot. |
 
 ## Protocol
 
 **ESP-NOW frame** (`common/twab_link/include/twab_link.h`): 28-byte packed
 header + ≤160-byte ASCII payload, authenticated with a truncated HMAC-SHA256
-over the whole frame. Not encrypted — a sniffer can tell that someone pressed
+over the whole frame. Not encrypted - a sniffer can tell that someone pressed
 the button, and cannot cause or replay a press. ESP-NOW's built-in crypto was
 passed over because it caps at 6 encrypted peers on ESP32 and can't cover
 broadcast, which would put a ceiling on a fleet that is meant to grow.
 
 **UART** is newline-delimited JSON in both directions, because at 115200 with a
 few frames a day nothing is gained by packing bytes and everything is gained by
-being able to clip a USB-serial adapter on and read the traffic — or drive
+being able to clip a USB-serial adapter on and read the traffic - or drive
 either half by hand from a terminal while the other half is unplugged.
 
 Master → bridge:
@@ -291,7 +291,7 @@ POST http://<bridge-ip>/cmd    {"node":"a3f1","data":{...}}
 
 `/status` is the only way to see the link without a serial cable: firmware, IP,
 RSSI, whether the master is still talking, POST counters, and how long ago the
-last press was. `/cmd` hands a payload to the master, which puts it on the air —
+last press was. `/cmd` hands a payload to the master, which puts it on the air -
 nothing uses it yet, it's the hook the next section hangs off.
 
 ## Adding a WLED strip (or anything else) later
@@ -301,7 +301,7 @@ Nothing in the master or the bridge knows what a button is. To add a node:
 1. Give it a number in `twab_dev_t` (`TWAB_DEV_LIGHT` is already there).
 2. Flash it with the same `twab_secrets.h` and the same channel.
 3. It sends `TWAB_MSG_HELLO` once and `TWAB_MSG_EVENT` whenever it likes; the
-   master registers it on the first authenticated frame — no pairing step — and
+   master registers it on the first authenticated frame - no pairing step - and
    forwards everything to the bridge, which POSTs it to `/api/espnow/event`.
 4. To *drive* it, POST to the bridge's `/cmd` with that node's id; the master
    unicasts a `TWAB_MSG_CMD` frame to it. `"node":"ffff"` broadcasts to all.
@@ -321,13 +321,13 @@ Two things to know before wiring lights in:
 
 | Symptom | Look at |
 |---|---|
-| Button: 4 fast blinks, always | **Antenna not plugged into the XIAO's U.FL connector** — check this first, it has no onboard antenna. Then: wrong `twab_secrets.h` key, wrong channel, or the master is down. Master logs `frame failed auth` for a key mismatch and says nothing at all for a channel mismatch. |
+| Button: 4 fast blinks, always | **Antenna not plugged into the XIAO's U.FL connector** - check this first, it has no onboard antenna. Then: wrong `twab_secrets.h` key, wrong channel, or the master is down. Master logs `frame failed auth` for a key mismatch and says nothing at all for a channel mismatch. |
 | Button's COM port keeps disappearing | Not a fault. The XIAO's USB console is the ESP32 itself, so deep sleep un-enumerates it. Build with `TWABB_DEEP_SLEEP 0` for bench work. |
-| Timing behaves nothing like the constants say | `CONFIG_FREERTOS_HZ` reverted to 100. `sdkconfig.defaults` is ignored while `sdkconfig` exists — delete it and rebuild. |
+| Timing behaves nothing like the constants say | `CONFIG_FREERTOS_HZ` reverted to 100. `sdkconfig.defaults` is ignored while `sdkconfig` exists - delete it and rebuild. |
 | Button: 2 blinks, always | Master is fine; the bridge or the Controller isn't. Check `GET /status` on the bridge. |
 | Master logs nothing, bridge warns "no traffic from master" | UART: TX/RX not crossed, or no shared ground. |
 | Presses land twice | A node built from older firmware that increments `seq` per retry. Both ends must be current. |
-| Bridge reboots in a loop after an update | Rollback working as designed — it couldn't reach the Controller. It will come back on the old image. |
+| Bridge reboots in a loop after an update | Rollback working as designed - it couldn't reach the Controller. It will come back on the old image. |
 
 ## Blue Iris side
 

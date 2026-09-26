@@ -41,7 +41,7 @@ writes these. How the buffer behaves between presses is in [preroll.md](preroll.
 Blue Iris keeps an **encoded** pre-trigger buffer only for a **network** camera
 recording direct to disk. A USB camera's buffer is raw frames, capped at about one
 second: changing one's pre-trigger from 20 s to 5 s moved the saved clip by 10 ms,
-and the real lead-in was ~0.1 s. Bridge every USB device to RTSP
+and the actual lead-in was ~0.1 s. Bridge every USB device to RTSP
 ([usb-to-h264.md](usb-to-h264.md)); the same camera then saved 58.2 s.
 
 ## The rest of the lock

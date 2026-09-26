@@ -16,7 +16,7 @@ short interval (30 s is plenty) that, every cycle:
    process exists. A wedged ffmpeg is still a process. `ffprobe -select_streams
    v:0` against the RTSP URL is the check that means something.
 
-🔴 **This is why a microphone bridge needs a synthetic video track** — step 5
+🔴 **This is why a microphone bridge needs a synthetic video track** - step 5
 asks for a video stream, and an audio-only source has none, so the supervisor
 would restart it for ever. See [../../docs/audio.md](../../docs/audio.md).
 
@@ -37,4 +37,4 @@ or not a user is logged on.
 
 ⚠️ If the machine has no auto-logon, a reboot leaves the rig dead until somebody
 logs in at the console. That is a deliberate choice on the reference rig, not an
-oversight — but know which one you have made.
+oversight - but know which one you have made.
