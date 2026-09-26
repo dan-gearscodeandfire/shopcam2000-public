@@ -1,0 +1,10 @@
+# The calibration toolkit. Not needed by the Controller itself.
+httpx>=0.28        # Dahua/Amcrest CGI, ONVIF, Foscam
+numpy>=1.26        # every pixel measurement
+pillow>=10         # frame decode and overlays
+
+# USB (UVC) cameras only, Windows only: DirectShow ProcAmp via calibrate/remote/procamp.py
+comtypes>=1.4; sys_platform == "win32"
+pygrabber>=0.2; sys_platform == "win32"
+
+# ffmpeg and ffprobe are also required and are not on PyPI; see calibrate/site_paths.py.

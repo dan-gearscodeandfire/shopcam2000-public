@@ -108,6 +108,14 @@ scripts that **add** such a camera to Blue Iris or **convert** an existing USB
 camera into a bridged one. [`contrib/hooks/`](contrib/hooks/) is what runs after
 a press: colour re-tagging and transcription.
 
+## Calibration: the toolkit and every setting it picked
+
+[`contrib/calibrate/`](contrib/calibrate/) is the toolkit that matched the
+rig's cameras to each other, and `contrib/calibrate/reference/CAM1.md` to
+`CAM9.md` are the results: each camera's last-known-good settings, which of its
+knobs work and which only pretend to, and a dated history of every change. The
+background is in [docs/calibration.md](docs/calibration.md).
+
 ## The documentation is the point
 
 Most of this code is ordinary. What is not ordinary is that the awkward parts

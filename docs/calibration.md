@@ -57,3 +57,29 @@ Two things worth checking before you give up on the pipeline:
   data will look washed out until you tell your NLE to interpret it as full.
 - **Veiling flare.** A dome that has not been cleaned lifts blacks across the
   whole frame and no amount of white balance will fix it. **Clean the dome.**
+
+## The toolkit and the numbers
+
+Everything above came out of a toolkit that is now in this repo, in
+[`contrib/calibrate/`](../contrib/calibrate/), together with the settings it
+produced.
+
+- **`contrib/calibrate/reference/CAM1.md` to `CAM9.md`** are the per-camera
+  records. Each one holds that camera's last-known-good settings as JSON, the
+  knob ranges and how each was established, the knobs that read back correctly
+  and change nothing, its clip ceiling, and a dated, append-only history of what
+  was changed, why, and what the person looking at the picture said. These are
+  the settings the rig actually films with.
+- **`contrib/calibrate/baselines/`** holds a full live read of the whole fleet
+  from 2026-08-07, the snapshot the reference files were seeded from.
+- **`contrib/calibrate/tools/calibrate.py`** is the entry point: `check` diffs
+  every camera against its reference file, `sweep` moves one knob up and then
+  down inside a single recording, `score` measures that recording, and `reseed`
+  adopts the live state as the new last-known-good.
+
+The code is written against this rig's eight cameras and five control
+protocols, so expect to edit the camera table before it is useful on yours. The
+reference files are worth reading either way: they are a record of which
+settings on common Amcrest, OBSBOT, XiongMai and Foscam cameras do what the
+label says, and which do not. See the toolkit's own
+[README](../contrib/calibrate/README.md) for what each file does.

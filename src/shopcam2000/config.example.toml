@@ -25,7 +25,7 @@ timeout = 10.0
 
 
 [cameras]
-# Only needed for the calibration tools in `calibrate/` and `tools/`, which talk
+# Only needed for the calibration toolkit in `contrib/calibrate/`, which talks
 # to the cameras directly rather than through Blue Iris. The Controller itself
 # never touches these — it goes through Blue Iris for everything.
 #
@@ -37,7 +37,14 @@ timeout = 10.0
 # Also the fallback credential for any host not listed in another section.
 user = "admin"
 password = "changeme"
-hosts = { CAM2 = "192.0.2.11", CAM4 = "192.0.2.12", CAM7 = "192.0.2.13" }
+hosts = { CAM4 = "192.0.2.12", CAM7 = "192.0.2.13" }
+
+[cameras.ash21]
+# An Amcrest ASH21, driven over ONVIF Imaging only (it exposes levels and no
+# white balance). Its own credential pair, because ONVIF users are separate.
+host = "192.0.2.11"
+user = "admin"
+password = "changeme"
 
 [cameras.foscam]
 # Foscam CGIProxy.fcgi. Note these cameras often refuse `admin` outright.

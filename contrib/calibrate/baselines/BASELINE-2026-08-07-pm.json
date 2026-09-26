@@ -1,0 +1,1108 @@
+{
+  "captured": "2026-08-07T19:23:20-04:00",
+  "note": "Live read from every device. CAM9 is a desktop capture and has no image settings.",
+  "cameras": {
+    "CAM1": {
+      "device": "OBSBOT Tiny 4K Camera (USB/ProcAmp)",
+      "procamp": {
+        "Brightness": {
+          "value": 50,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        },
+        "Contrast": {
+          "value": 60,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        },
+        "Hue": {
+          "value": 51,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        },
+        "Saturation": {
+          "value": 53,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        },
+        "Sharpness": {
+          "value": 45,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        },
+        "WhiteBalance": {
+          "value": 4800,
+          "mode": "manual",
+          "range": [
+            2800,
+            6500,
+            100
+          ]
+        },
+        "BacklightCompensation": {
+          "value": 9,
+          "mode": "manual",
+          "range": [
+            0,
+            18,
+            1
+          ]
+        },
+        "Gain": {
+          "value": 1,
+          "mode": "manual",
+          "range": [
+            1,
+            48,
+            1
+          ]
+        }
+      },
+      "camctrl": {
+        "Pan": {
+          "value": -92,
+          "mode": "manual",
+          "range": [
+            -130,
+            130,
+            1
+          ]
+        },
+        "Tilt": {
+          "value": 20,
+          "mode": "manual",
+          "range": [
+            -90,
+            90,
+            1
+          ]
+        },
+        "Zoom": {
+          "value": 0,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        },
+        "Exposure": {
+          "value": -6,
+          "mode": "manual",
+          "range": [
+            -13,
+            -2,
+            1
+          ]
+        },
+        "Iris": {
+          "value": 0,
+          "mode": "manual",
+          "range": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Focus": {
+          "value": 2,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        }
+      }
+    },
+    "CAM2": {
+      "device": "Amcrest ASH21-B-V2 (ONVIF only)",
+      "levels": {
+        "Brightness": 36.0,
+        "ColorSaturation": 43.0,
+        "Contrast": 41.0,
+        "Sharpness": 50.0
+      }
+    },
+    "CAM3": {
+      "device": "XiongMai / Sofia dvrip :34567",
+      "LIVE_section0": {
+        "Acutance": 3848,
+        "Brightness": 30,
+        "Contrast": 53,
+        "Gain": 0,
+        "Hue": 50,
+        "Saturation": 30,
+        "Whitebalance": 128
+      },
+      "inactive_section1": {
+        "Acutance": 3848,
+        "Brightness": 30,
+        "Contrast": 53,
+        "Gain": 0,
+        "Hue": 50,
+        "Saturation": 30,
+        "Whitebalance": 128
+      },
+      "camera_param": {
+        "WhiteBalance": "0x00000000",
+        "DayNightColor": "0x00000001",
+        "GainParam": {
+          "AutoGain": 0,
+          "Gain": 0
+        },
+        "ExposureParam": {
+          "LeastTime": "0x00000100",
+          "Level": 3,
+          "MostTime": "0x00010000"
+        }
+      }
+    },
+    "CAM4": {
+      "device": "Amcrest IP-cam (Dahua CGI)",
+      "config_profile_field": 2,
+      "video_in_mode": {
+        "Config[0]": "2",
+        "Mode": "0"
+      },
+      "color": {
+        "Brightness": "50",
+        "ChromaSuppress": "1",
+        "Contrast": "50",
+        "Gamma": "5",
+        "Hue": "50",
+        "Saturation": "50",
+        "Style": "Standard"
+      },
+      "exposure": {
+        "AntiFlicker": "2",
+        "AutoGainMax": "2",
+        "Backlight": "0",
+        "BacklightRegion[0]": "3096",
+        "BacklightRegion[1]": "3096",
+        "BacklightRegion[2]": "5096",
+        "BacklightRegion[3]": "5096",
+        "Compensation": "50",
+        "DoubleExposure": "0",
+        "Gain": "1",
+        "GainMax": "12",
+        "GainMin": "2",
+        "GlareInhibition": "0",
+        "Iris": "50",
+        "IrisAuto": "true",
+        "IrisMax": "50",
+        "IrisMin": "0",
+        "Mode": "4",
+        "RecoveryTime": "900",
+        "Rect[0]": "0",
+        "Rect[1]": "0",
+        "Rect[2]": "0",
+        "Rect[3]": "0",
+        "SlowAutoExposure": "0",
+        "SlowShutter": "false",
+        "SlowSpeed": "30",
+        "Speed": "0",
+        "Value1": "16.670000",
+        "Value2": "16.670000",
+        "WideDynamicRange": "0",
+        "WideDynamicRangeMode": "0"
+      },
+      "white_balance": {
+        "ColorTemperatureLevel": "50",
+        "GainBlue": "34",
+        "GainGreen": "50",
+        "GainRed": "23",
+        "ManualDatumRect[0]": "3096",
+        "ManualDatumRect[1]": "3096",
+        "ManualDatumRect[2]": "5096",
+        "ManualDatumRect[3]": "5096",
+        "Mode": "Manual"
+      },
+      "daynight_all_profiles": {
+        "profile0": "Color",
+        "profile1": "Color",
+        "profile2": "Color"
+      },
+      "backlight": {
+        "BacklightMode": "Default",
+        "BacklightRegion[0]": "3096",
+        "BacklightRegion[1]": "3096",
+        "BacklightRegion[2]": "5096",
+        "BacklightRegion[3]": "5096",
+        "GlareInhibition": "50",
+        "Intensity": "50",
+        "IntensityMode": "Disable",
+        "Mode": "Off",
+        "WideDynamicRange": "16"
+      },
+      "sharpness": {
+        "Level": "50",
+        "Mode": "1",
+        "Sharpness": "40"
+      },
+      "all_profiles": {
+        "VideoInColor[0]": {
+          "Brightness": "50",
+          "ChromaSuppress": "1",
+          "Contrast": "50",
+          "Gamma": "5",
+          "Hue": "50",
+          "Saturation": "50",
+          "Style": "Standard"
+        },
+        "VideoInColor[1]": {
+          "Brightness": "50",
+          "ChromaSuppress": "1",
+          "Contrast": "50",
+          "Gamma": "5",
+          "Hue": "50",
+          "Saturation": "50",
+          "Style": "Standard"
+        },
+        "VideoInColor[2]": {
+          "Brightness": "50",
+          "ChromaSuppress": "1",
+          "Contrast": "50",
+          "Gamma": "5",
+          "Hue": "50",
+          "Saturation": "50",
+          "Style": "Standard"
+        },
+        "VideoInExposure[0]": {
+          "AntiFlicker": "2",
+          "AutoGainMax": "2",
+          "Backlight": "0",
+          "BacklightRegion[0]": "3096",
+          "BacklightRegion[1]": "3096",
+          "BacklightRegion[2]": "5096",
+          "BacklightRegion[3]": "5096",
+          "Compensation": "50",
+          "DoubleExposure": "0",
+          "Gain": "1",
+          "GainMax": "12",
+          "GainMin": "2",
+          "GlareInhibition": "0",
+          "Iris": "50",
+          "IrisAuto": "true",
+          "IrisMax": "50",
+          "IrisMin": "0",
+          "Mode": "4",
+          "RecoveryTime": "900",
+          "Rect[0]": "0",
+          "Rect[1]": "0",
+          "Rect[2]": "0",
+          "Rect[3]": "0",
+          "SlowAutoExposure": "0",
+          "SlowShutter": "false",
+          "SlowSpeed": "30",
+          "Speed": "0",
+          "Value1": "16.670000",
+          "Value2": "16.670000",
+          "WideDynamicRange": "0",
+          "WideDynamicRangeMode": "0"
+        },
+        "VideoInExposure[1]": {
+          "AntiFlicker": "2",
+          "AutoGainMax": "2",
+          "Backlight": "0",
+          "BacklightRegion[0]": "3096",
+          "BacklightRegion[1]": "3096",
+          "BacklightRegion[2]": "5096",
+          "BacklightRegion[3]": "5096",
+          "Compensation": "50",
+          "DoubleExposure": "0",
+          "Gain": "1",
+          "GainMax": "12",
+          "GainMin": "2",
+          "GlareInhibition": "0",
+          "Iris": "50",
+          "IrisAuto": "true",
+          "IrisMax": "50",
+          "IrisMin": "0",
+          "Mode": "4",
+          "RecoveryTime": "900",
+          "Rect[0]": "0",
+          "Rect[1]": "0",
+          "Rect[2]": "0",
+          "Rect[3]": "0",
+          "SlowAutoExposure": "0",
+          "SlowShutter": "false",
+          "SlowSpeed": "30",
+          "Speed": "0",
+          "Value1": "16.670000",
+          "Value2": "16.670000",
+          "WideDynamicRange": "0",
+          "WideDynamicRangeMode": "0"
+        },
+        "VideoInExposure[2]": {
+          "AntiFlicker": "2",
+          "AutoGainMax": "2",
+          "Backlight": "0",
+          "BacklightRegion[0]": "3096",
+          "BacklightRegion[1]": "3096",
+          "BacklightRegion[2]": "5096",
+          "BacklightRegion[3]": "5096",
+          "Compensation": "50",
+          "DoubleExposure": "0",
+          "Gain": "1",
+          "GainMax": "12",
+          "GainMin": "2",
+          "GlareInhibition": "0",
+          "Iris": "50",
+          "IrisAuto": "true",
+          "IrisMax": "50",
+          "IrisMin": "0",
+          "Mode": "4",
+          "RecoveryTime": "900",
+          "Rect[0]": "0",
+          "Rect[1]": "0",
+          "Rect[2]": "0",
+          "Rect[3]": "0",
+          "SlowAutoExposure": "0",
+          "SlowShutter": "false",
+          "SlowSpeed": "30",
+          "Speed": "0",
+          "Value1": "16.670000",
+          "Value2": "16.670000",
+          "WideDynamicRange": "0",
+          "WideDynamicRangeMode": "0"
+        },
+        "VideoInWhiteBalance[0]": {
+          "ColorTemperatureLevel": "50",
+          "GainBlue": "34",
+          "GainGreen": "50",
+          "GainRed": "23",
+          "ManualDatumRect[0]": "3096",
+          "ManualDatumRect[1]": "3096",
+          "ManualDatumRect[2]": "5096",
+          "ManualDatumRect[3]": "5096",
+          "Mode": "Manual"
+        },
+        "VideoInWhiteBalance[1]": {
+          "ColorTemperatureLevel": "50",
+          "GainBlue": "34",
+          "GainGreen": "50",
+          "GainRed": "23",
+          "ManualDatumRect[0]": "3096",
+          "ManualDatumRect[1]": "3096",
+          "ManualDatumRect[2]": "5096",
+          "ManualDatumRect[3]": "5096",
+          "Mode": "Manual"
+        },
+        "VideoInWhiteBalance[2]": {
+          "ColorTemperatureLevel": "50",
+          "GainBlue": "34",
+          "GainGreen": "50",
+          "GainRed": "23",
+          "ManualDatumRect[0]": "3096",
+          "ManualDatumRect[1]": "3096",
+          "ManualDatumRect[2]": "5096",
+          "ManualDatumRect[3]": "5096",
+          "Mode": "Manual"
+        },
+        "VideoInDayNight[0]": {
+          "Delay": "6",
+          "Mode": "Color",
+          "Sensitivity": "2",
+          "Type": "Mechanism"
+        },
+        "VideoInDayNight[1]": {
+          "Delay": "6",
+          "Mode": "Color",
+          "Sensitivity": "2",
+          "Type": "Mechanism"
+        },
+        "VideoInDayNight[2]": {
+          "Delay": "6",
+          "Mode": "Color",
+          "Sensitivity": "2",
+          "Type": "Mechanism"
+        },
+        "VideoInBacklight[0]": {
+          "BacklightMode": "Default",
+          "BacklightRegion[0]": "3096",
+          "BacklightRegion[1]": "3096",
+          "BacklightRegion[2]": "5096",
+          "BacklightRegion[3]": "5096",
+          "GlareInhibition": "50",
+          "Intensity": "50",
+          "IntensityMode": "Disable",
+          "Mode": "Off",
+          "WideDynamicRange": "16"
+        },
+        "VideoInBacklight[1]": {
+          "BacklightMode": "Default",
+          "BacklightRegion[0]": "3096",
+          "BacklightRegion[1]": "3096",
+          "BacklightRegion[2]": "5096",
+          "BacklightRegion[3]": "5096",
+          "GlareInhibition": "50",
+          "Intensity": "50",
+          "IntensityMode": "Disable",
+          "Mode": "Off",
+          "WideDynamicRange": "16"
+        },
+        "VideoInBacklight[2]": {
+          "BacklightMode": "Default",
+          "BacklightRegion[0]": "3096",
+          "BacklightRegion[1]": "3096",
+          "BacklightRegion[2]": "5096",
+          "BacklightRegion[3]": "5096",
+          "GlareInhibition": "50",
+          "Intensity": "50",
+          "IntensityMode": "Disable",
+          "Mode": "Off",
+          "WideDynamicRange": "16"
+        },
+        "VideoInSharpness[0]": {
+          "Level": "50",
+          "Mode": "1",
+          "Sharpness": "40"
+        },
+        "VideoInSharpness[1]": {
+          "Level": "50",
+          "Mode": "1",
+          "Sharpness": "40"
+        },
+        "VideoInSharpness[2]": {
+          "Level": "50",
+          "Mode": "1",
+          "Sharpness": "40"
+        },
+        "Lighting[0]": {
+          "Correction": "50",
+          "Angle": "50",
+          "Light": "50",
+          "Mode": "Off",
+          "Sensitive": "3"
+        },
+        "Lighting[1]": {
+          "_absent": "Lighting[0][1] not exposed by this camera"
+        },
+        "Lighting[2]": {
+          "_absent": "Lighting[0][2] not exposed by this camera"
+        }
+      }
+    },
+    "CAM5": {
+      "device": "OBSBOT Tiny Camera (USB/ProcAmp)",
+      "procamp": {
+        "Brightness": {
+          "value": 45,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        },
+        "Contrast": {
+          "value": 60,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        },
+        "Hue": {
+          "value": 51,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        },
+        "Saturation": {
+          "value": 53,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        },
+        "Sharpness": {
+          "value": 45,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        },
+        "WhiteBalance": {
+          "value": 4800,
+          "mode": "manual",
+          "range": [
+            2800,
+            6500,
+            100
+          ]
+        },
+        "BacklightCompensation": {
+          "value": 9,
+          "mode": "manual",
+          "range": [
+            0,
+            18,
+            1
+          ]
+        },
+        "Gain": {
+          "value": 1,
+          "mode": "manual",
+          "range": [
+            1,
+            48,
+            1
+          ]
+        }
+      },
+      "camctrl": {
+        "Pan": {
+          "value": 12,
+          "mode": "manual",
+          "range": [
+            -130,
+            130,
+            1
+          ]
+        },
+        "Tilt": {
+          "value": -1,
+          "mode": "manual",
+          "range": [
+            -90,
+            90,
+            2
+          ]
+        },
+        "Zoom": {
+          "value": 0,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        },
+        "Exposure": {
+          "value": -6,
+          "mode": "manual",
+          "range": [
+            -13,
+            -2,
+            1
+          ]
+        },
+        "Iris": {
+          "value": 0,
+          "mode": "manual",
+          "range": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "CAM6": {
+      "device": "Foscam R2C (CGI :88)",
+      "getImageSetting": {
+        "brightness": "50",
+        "contrast": "50",
+        "hue": "50",
+        "saturation": "30",
+        "sharpness": "35",
+        "denoiseLevel": "50"
+      },
+      "getInfraLedConfig": {
+        "mode": "0"
+      },
+      "getVideoStreamParam": {
+        "resolution0": "7",
+        "resolution1": "0",
+        "resolution2": "1",
+        "resolution3": "7",
+        "bitRate0": "1048576",
+        "bitRate1": "524288",
+        "bitRate2": "262144",
+        "bitRate3": "4194304",
+        "frameRate0": "25",
+        "frameRate1": "15",
+        "frameRate2": "15",
+        "frameRate3": "25",
+        "GOP0": "30",
+        "GOP1": "30",
+        "GOP2": "30",
+        "GOP3": "50",
+        "isVBR0": "0",
+        "isVBR1": "1",
+        "isVBR2": "1",
+        "isVBR3": "1"
+      }
+    },
+    "CAM7": {
+      "device": "Amcrest IP4M-1041W (Dahua CGI)",
+      "config_profile_field": 2,
+      "video_in_mode": {
+        "Config[0]": "2",
+        "Mode": "0"
+      },
+      "color": {
+        "Brightness": "50",
+        "ChromaSuppress": "1",
+        "Contrast": "50",
+        "Gamma": "15",
+        "Hue": "50",
+        "Saturation": "50",
+        "Style": "Standard"
+      },
+      "exposure": {
+        "AntiFlicker": "2",
+        "AutoGainMax": "12",
+        "Backlight": "0",
+        "BacklightRegion[0]": "3096",
+        "BacklightRegion[1]": "3096",
+        "BacklightRegion[2]": "5096",
+        "BacklightRegion[3]": "5096",
+        "Compensation": "55",
+        "DoubleExposure": "0",
+        "Gain": "1",
+        "GainMax": "12",
+        "GainMin": "2",
+        "GlareInhibition": "0",
+        "Iris": "50",
+        "IrisAuto": "true",
+        "IrisMax": "50",
+        "IrisMin": "0",
+        "Mode": "4",
+        "RecoveryTime": "900",
+        "Rect[0]": "0",
+        "Rect[1]": "0",
+        "Rect[2]": "0",
+        "Rect[3]": "0",
+        "SlowAutoExposure": "0",
+        "SlowShutter": "false",
+        "SlowSpeed": "30",
+        "Speed": "0",
+        "Value1": "8.330000",
+        "Value2": "16.670000",
+        "WideDynamicRange": "0",
+        "WideDynamicRangeMode": "0"
+      },
+      "white_balance": {
+        "ColorTemperatureLevel": "50",
+        "GainBlue": "33",
+        "GainGreen": "50",
+        "GainRed": "34",
+        "ManualDatumRect[0]": "3096",
+        "ManualDatumRect[1]": "3096",
+        "ManualDatumRect[2]": "5096",
+        "ManualDatumRect[3]": "5096",
+        "Mode": "Manual"
+      },
+      "daynight_all_profiles": {
+        "profile0": "Color",
+        "profile1": "Color",
+        "profile2": "Color"
+      },
+      "backlight": {
+        "BacklightMode": "Default",
+        "BacklightRegion[0]": "3096",
+        "BacklightRegion[1]": "3096",
+        "BacklightRegion[2]": "5096",
+        "BacklightRegion[3]": "5096",
+        "GlareInhibition": "50",
+        "Intensity": "50",
+        "IntensityMode": "Disable",
+        "Mode": "Off",
+        "WideDynamicRange": "7"
+      },
+      "sharpness": {
+        "Level": "50",
+        "Mode": "1",
+        "Sharpness": "47"
+      },
+      "all_profiles": {
+        "VideoInColor[0]": {
+          "Brightness": "50",
+          "ChromaSuppress": "1",
+          "Contrast": "50",
+          "Gamma": "15",
+          "Hue": "50",
+          "Saturation": "50",
+          "Style": "Standard"
+        },
+        "VideoInColor[1]": {
+          "Brightness": "50",
+          "ChromaSuppress": "1",
+          "Contrast": "50",
+          "Gamma": "15",
+          "Hue": "50",
+          "Saturation": "50",
+          "Style": "Standard"
+        },
+        "VideoInColor[2]": {
+          "Brightness": "50",
+          "ChromaSuppress": "1",
+          "Contrast": "50",
+          "Gamma": "15",
+          "Hue": "50",
+          "Saturation": "50",
+          "Style": "Standard"
+        },
+        "VideoInExposure[0]": {
+          "AntiFlicker": "2",
+          "AutoGainMax": "12",
+          "Backlight": "0",
+          "BacklightRegion[0]": "3096",
+          "BacklightRegion[1]": "3096",
+          "BacklightRegion[2]": "5096",
+          "BacklightRegion[3]": "5096",
+          "Compensation": "55",
+          "DoubleExposure": "0",
+          "Gain": "1",
+          "GainMax": "12",
+          "GainMin": "2",
+          "GlareInhibition": "0",
+          "Iris": "50",
+          "IrisAuto": "true",
+          "IrisMax": "50",
+          "IrisMin": "0",
+          "Mode": "4",
+          "RecoveryTime": "900",
+          "Rect[0]": "0",
+          "Rect[1]": "0",
+          "Rect[2]": "0",
+          "Rect[3]": "0",
+          "SlowAutoExposure": "0",
+          "SlowShutter": "false",
+          "SlowSpeed": "30",
+          "Speed": "0",
+          "Value1": "8.330000",
+          "Value2": "16.670000",
+          "WideDynamicRange": "0",
+          "WideDynamicRangeMode": "0"
+        },
+        "VideoInExposure[1]": {
+          "AntiFlicker": "2",
+          "AutoGainMax": "12",
+          "Backlight": "0",
+          "BacklightRegion[0]": "3096",
+          "BacklightRegion[1]": "3096",
+          "BacklightRegion[2]": "5096",
+          "BacklightRegion[3]": "5096",
+          "Compensation": "55",
+          "DoubleExposure": "0",
+          "Gain": "1",
+          "GainMax": "12",
+          "GainMin": "2",
+          "GlareInhibition": "0",
+          "Iris": "50",
+          "IrisAuto": "true",
+          "IrisMax": "50",
+          "IrisMin": "0",
+          "Mode": "4",
+          "RecoveryTime": "900",
+          "Rect[0]": "0",
+          "Rect[1]": "0",
+          "Rect[2]": "0",
+          "Rect[3]": "0",
+          "SlowAutoExposure": "0",
+          "SlowShutter": "false",
+          "SlowSpeed": "30",
+          "Speed": "0",
+          "Value1": "8.330000",
+          "Value2": "16.670000",
+          "WideDynamicRange": "0",
+          "WideDynamicRangeMode": "0"
+        },
+        "VideoInExposure[2]": {
+          "AntiFlicker": "2",
+          "AutoGainMax": "12",
+          "Backlight": "0",
+          "BacklightRegion[0]": "3096",
+          "BacklightRegion[1]": "3096",
+          "BacklightRegion[2]": "5096",
+          "BacklightRegion[3]": "5096",
+          "Compensation": "55",
+          "DoubleExposure": "0",
+          "Gain": "1",
+          "GainMax": "12",
+          "GainMin": "2",
+          "GlareInhibition": "0",
+          "Iris": "50",
+          "IrisAuto": "true",
+          "IrisMax": "50",
+          "IrisMin": "0",
+          "Mode": "4",
+          "RecoveryTime": "900",
+          "Rect[0]": "0",
+          "Rect[1]": "0",
+          "Rect[2]": "0",
+          "Rect[3]": "0",
+          "SlowAutoExposure": "0",
+          "SlowShutter": "false",
+          "SlowSpeed": "30",
+          "Speed": "0",
+          "Value1": "8.330000",
+          "Value2": "16.670000",
+          "WideDynamicRange": "0",
+          "WideDynamicRangeMode": "0"
+        },
+        "VideoInWhiteBalance[0]": {
+          "ColorTemperatureLevel": "50",
+          "GainBlue": "33",
+          "GainGreen": "50",
+          "GainRed": "34",
+          "ManualDatumRect[0]": "3096",
+          "ManualDatumRect[1]": "3096",
+          "ManualDatumRect[2]": "5096",
+          "ManualDatumRect[3]": "5096",
+          "Mode": "Manual"
+        },
+        "VideoInWhiteBalance[1]": {
+          "ColorTemperatureLevel": "50",
+          "GainBlue": "33",
+          "GainGreen": "50",
+          "GainRed": "34",
+          "ManualDatumRect[0]": "3096",
+          "ManualDatumRect[1]": "3096",
+          "ManualDatumRect[2]": "5096",
+          "ManualDatumRect[3]": "5096",
+          "Mode": "Manual"
+        },
+        "VideoInWhiteBalance[2]": {
+          "ColorTemperatureLevel": "50",
+          "GainBlue": "33",
+          "GainGreen": "50",
+          "GainRed": "34",
+          "ManualDatumRect[0]": "3096",
+          "ManualDatumRect[1]": "3096",
+          "ManualDatumRect[2]": "5096",
+          "ManualDatumRect[3]": "5096",
+          "Mode": "Manual"
+        },
+        "VideoInDayNight[0]": {
+          "Delay": "2",
+          "Mode": "Color",
+          "Sensitivity": "3",
+          "Type": "Mechanism"
+        },
+        "VideoInDayNight[1]": {
+          "Delay": "2",
+          "Mode": "Color",
+          "Sensitivity": "3",
+          "Type": "Mechanism"
+        },
+        "VideoInDayNight[2]": {
+          "Delay": "2",
+          "Mode": "Color",
+          "Sensitivity": "3",
+          "Type": "Mechanism"
+        },
+        "VideoInBacklight[0]": {
+          "BacklightMode": "Default",
+          "BacklightRegion[0]": "3096",
+          "BacklightRegion[1]": "3096",
+          "BacklightRegion[2]": "5096",
+          "BacklightRegion[3]": "5096",
+          "GlareInhibition": "50",
+          "Intensity": "50",
+          "IntensityMode": "Disable",
+          "Mode": "Off",
+          "WideDynamicRange": "7"
+        },
+        "VideoInBacklight[1]": {
+          "BacklightMode": "Default",
+          "BacklightRegion[0]": "3096",
+          "BacklightRegion[1]": "3096",
+          "BacklightRegion[2]": "5096",
+          "BacklightRegion[3]": "5096",
+          "GlareInhibition": "50",
+          "Intensity": "50",
+          "IntensityMode": "Disable",
+          "Mode": "Off",
+          "WideDynamicRange": "7"
+        },
+        "VideoInBacklight[2]": {
+          "BacklightMode": "Default",
+          "BacklightRegion[0]": "3096",
+          "BacklightRegion[1]": "3096",
+          "BacklightRegion[2]": "5096",
+          "BacklightRegion[3]": "5096",
+          "GlareInhibition": "50",
+          "Intensity": "50",
+          "IntensityMode": "Disable",
+          "Mode": "Off",
+          "WideDynamicRange": "7"
+        },
+        "VideoInSharpness[0]": {
+          "Level": "50",
+          "Mode": "1",
+          "Sharpness": "47"
+        },
+        "VideoInSharpness[1]": {
+          "Level": "50",
+          "Mode": "1",
+          "Sharpness": "47"
+        },
+        "VideoInSharpness[2]": {
+          "Level": "50",
+          "Mode": "1",
+          "Sharpness": "47"
+        },
+        "Lighting[0]": {
+          "Correction": "50",
+          "Angle": "50",
+          "Light": "50",
+          "Mode": "Auto",
+          "Sensitive": "3"
+        },
+        "Lighting[1]": {
+          "Correction": "50",
+          "Angle": "50",
+          "Light": "50",
+          "Mode": "Auto",
+          "Sensitive": "3"
+        },
+        "Lighting[2]": {
+          "Correction": "50",
+          "Angle": "50",
+          "Light": "50",
+          "Mode": "Auto",
+          "Sensitive": "3"
+        }
+      }
+    },
+    "CAM8": {
+      "device": "USB Camera (USB/ProcAmp)",
+      "procamp": {
+        "Brightness": {
+          "value": 0,
+          "mode": "manual",
+          "range": [
+            -64,
+            64,
+            1
+          ]
+        },
+        "Contrast": {
+          "value": 32,
+          "mode": "manual",
+          "range": [
+            0,
+            64,
+            1
+          ]
+        },
+        "Hue": {
+          "value": 0,
+          "mode": "manual",
+          "range": [
+            -40,
+            40,
+            1
+          ]
+        },
+        "Saturation": {
+          "value": 56,
+          "mode": "manual",
+          "range": [
+            0,
+            128,
+            1
+          ]
+        },
+        "Sharpness": {
+          "value": 3,
+          "mode": "manual",
+          "range": [
+            0,
+            6,
+            1
+          ]
+        },
+        "Gamma": {
+          "value": 100,
+          "mode": "manual",
+          "range": [
+            72,
+            500,
+            1
+          ]
+        },
+        "WhiteBalance": {
+          "value": 3540,
+          "mode": "manual",
+          "range": [
+            2800,
+            6500,
+            1
+          ]
+        },
+        "BacklightCompensation": {
+          "value": 1,
+          "mode": "manual",
+          "range": [
+            0,
+            2,
+            1
+          ]
+        },
+        "Gain": {
+          "value": 0,
+          "mode": "manual",
+          "range": [
+            0,
+            100,
+            1
+          ]
+        }
+      },
+      "camctrl": {
+        "Roll": {
+          "value": 0,
+          "mode": "manual",
+          "range": [
+            0,
+            0,
+            0
+          ]
+        },
+        "Exposure": {
+          "value": -7,
+          "mode": "manual",
+          "range": [
+            -13,
+            -1,
+            1
+          ]
+        }
+      }
+    }
+  }
+}
