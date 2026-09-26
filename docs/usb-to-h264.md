@@ -10,7 +10,7 @@ and cannot tell the difference.
 ```
   webcam ──USB──> ffmpeg ──RTSP──> MediaMTX ──RTSP──> Blue Iris ──> disk
                     │
-                    └── H.264, and a small substream for the live grid
+                    └── one H.264 stream (no substream: see finding 2)
 ```
 
 You need an RTSP **server** in the middle. ffmpeg can publish but not serve.
@@ -22,8 +22,8 @@ Get a starting command with:
 
 ```
 shopcam encode --list
-shopcam encode --device "Your Camera" --url rtsp://127.0.0.1:8554/cam1 \
-               --substream-url rtsp://127.0.0.1:8554/cam1_sub --dry-run
+shopcam encode --device "Your Camera" --audio-device "Your Camera Mic" \
+               --encoder h264_nvenc --url rtsp://127.0.0.1:8554/cam1 --dry-run
 ```
 
 `--dry-run` prints the command instead of running it. Keep it in a script you can
@@ -51,20 +51,51 @@ which is exactly the thing a multi-camera edit cannot survive.
 
 **Always pin `-pix_fmt`.** `yuvj420p` unless you have a specific reason.
 
-### 2. Put the substream on the CPU, not the GPU
+### 2. One stream, no B-frames, no slices (what Blue Iris needs)
 
-A substream is a small second stream (640×480@15) for the recorder's live grid,
-so it is not decoding four 1080p feeds to draw thumbnails.
+These three were found the hard way on Blue Iris and are locked on the reference
+rig (2026-08-20). `shopcam encode` builds them in.
 
-Encode it with **libx264, not NVENC**, even when the main stream is NVENC.
-Consumer GeForce drivers have historically capped concurrent NVENC sessions
-(long at 2–3, later raised). Three cameras × 2 streams = 6 sessions, and you fall
-off a cliff with no obvious error. 640×480@15 on x264 is negligible CPU.
+- **No substream.** A substream is the usual advice for a recorder's live grid.
+  With Blue Iris consuming a bridge's substream, the *main* recording lost frames:
+  2–10 gaps per ~2-minute take, and **zero** with the substream unused, on a wire
+  that captured clean both times. Publish one stream and let Blue Iris decode it
+  for the grid (four 1080p30 mains cost it ~35% CPU on the reference box).
+- **`-bf 0`.** Blue Iris trims B-frames from the oldest part of the pre-roll:
+  with NVENC's automatic B-frames there were ~107 ms gaps at 1 Hz across the
+  first ~8 s of every saved clip. With `-bf 0`, none.
+- **No x264 slices.** `-tune zerolatency` turns on sliced threads (5 slices per
+  frame), and **Blue Iris counts slices as frames**: a 15 fps stream read as
+  75 fps, and Blue Iris "fixed" the A/V sync by discarding audio, a 265 ms hole
+  every 2.3 s. Any libx264 stream gets `-x264-params sliced-threads=0` (plus
+  `-threads 1` on a small one like the microphone's waveform).
 
-> ⚠️ It is also where the power goes. Switching four bridges off on the reference
-> rig saved **6.8 W of GPU and 34 percentage points of CPU** — and the CPU half
-> was the x264 substreams, not the NVENC main streams. If you are surprised by
-> your idle load, this is why.
+The locked NVENC main stream, per bridged camera:
+
+```
+-f dshow -vcodec mjpeg -video_size 1920x1080 -framerate 30 -use_wallclock_as_timestamps 1
+-pix_fmt yuvj420p
+-c:v h264_nvenc -preset p4 -tune ll -rc cbr -b:v 8M -maxrate 8M -bufsize 8M -g 30 -bf 0 -delay 0
+-c:a aac -b:a 128k -ar 48000 -ac 1
+-f rtsp -rtsp_transport tcp rtsp://127.0.0.1:8554/cam1
+```
+
+The exact scripts the rig runs are in [`contrib/windows/bridge/`](../contrib/windows/bridge/)
+(`run_cam1.cmd` is the reference). Two per-camera additions you may need:
+
+- **A camera whose clock runs fast** (one declared 30 fps and delivered 32.3):
+  wall-clock timestamps plus `--hold-fps` (`-vf fps=30`). `-r 30` alone does not fix it.
+- **A camera whose audio slides in 200 ms steps** against the voice track (dshow
+  drops audio chunks while its timestamps stay continuous): `-rtbufsize 256M
+  -audio_buffer_size 500` on the input and `-af aresample=async=1000:first_pts=0`.
+  `shopcam encode` adds both whenever `--audio-device` is set. It turns a lost chunk
+  into a short silence in the right place; it cannot recover a loss inside the
+  device itself (one camera on the rig still does that, and it is synced by picture).
+
+> ⚠️ Power: four bridges, when each also ran an x264 substream, cost **6.8 W of
+> GPU and 34 percentage points of CPU**, most of the CPU in the substreams. If you
+> keep a substream for another recorder, encode it with libx264, not NVENC:
+> consumer GeForce drivers have historically capped concurrent NVENC sessions.
 
 ### 3. Try the MJPEG pin before the H.264 pin
 

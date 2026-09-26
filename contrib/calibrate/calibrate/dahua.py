@@ -1,9 +1,14 @@
-"""Dahua/Amcrest CGI control (CAM2, CAM4, CAM7).
+"""Dahua/Amcrest CGI control (CAM4, CAM7). CAM2, the ASH21, has no CGI: see onvif_imaging.
 
 Everything goes over ``configManager.cgi`` on :80 with digest auth. Reads
 return ``table.Name[..].Key=value`` lines; writes are ``action=setConfig``
 with the same dotted keys as query params. Settings persist on the camera
 (they survive reboot — this is the camera's own config store).
+
+🔴 Every table has THREE profiles: [0][0] day, [0][1] night, [0][2] normal. With
+``VideoInMode[0].Mode=0`` the camera picks one by light level, so a knob written
+to one profile vanishes when the room dims. Write every knob to ALL THREE.
+The ``[0][0]`` below is the table shape, not a recommendation.
 
 Knob map (verified against the fleet 2026-07-24; older 2017 firmware on CAM4
 exposes the same tables):
@@ -13,8 +18,9 @@ exposes the same tables):
 * ``VideoInExposure[0][0]`` — ``Mode`` (0=auto ranges), ``Value1``/``Value2``
   (shutter ms range), ``Gain``/``GainMin``/``GainMax``, ``Compensation``
   (0-100, AE target bias, 50 = neutral).
-* ``VideoColor[0][0]`` — Brightness/Contrast/Saturation/Gamma post-processing
-  trims (50 = neutral).
+* ``VideoInColor[0][p]`` — Brightness/Contrast/Saturation/Hue (50 = neutral) and
+  Gamma (0-15, NOT 0-100: larger values are rejected with HTTP 400). The working
+  scripts (lock_cam4.py, lock_cam7.py, unstick.py) use this name.
 """
 from __future__ import annotations
 
@@ -131,7 +137,11 @@ class DahuaCam:
         stamp = time.strftime("%Y-%m-%d-%H%M%S")
         path = out_dir / f"rollback-{cam_label}-{stamp}.txt"
         chunks = []
-        for name in ("VideoInWhiteBalance", "VideoInExposure", "VideoColor",
+        # VideoInColor holds Gamma/Brightness/Contrast on these cameras; VideoColor
+        # is kept in case a firmware has it. VideoInBacklight is the WDR on/off
+        # switch. A missing table is recorded inline, not raised.
+        for name in ("VideoInWhiteBalance", "VideoInExposure", "VideoInColor",
+                     "VideoColor", "VideoInBacklight", "Lighting",
                      "VideoInOptions", "VideoInDayNight"):
             try:
                 text = self._cgi({"action": "getConfig", "name": name})

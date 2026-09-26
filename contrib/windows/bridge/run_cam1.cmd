@@ -27,6 +27,8 @@ rem (High 4:4:4 H.264) while CAM8 got yuvj420p. Blue Iris decodes 4:4:4 differen
 rem CAM1 rendered 5.76pp off in R/G. An ffmpeg-to-ffmpeg check cannot see this - the
 rem bridge output is fine, it is the CONSUMER's decode that differs.
 rem
+rem HISTORY: the substream this note describes was REMOVED on 2026-08-19 (see SUB above).
+rem Kept because the finding still holds for any recorder that needs one.
 rem Substream is libx264 (CPU) not NVENC: 3 cameras x 2 NVENC sessions = 6, and consumer
 rem GeForce drivers have historically capped concurrent sessions. 640x480@15 on x264 is
 rem negligible CPU and removes the risk.

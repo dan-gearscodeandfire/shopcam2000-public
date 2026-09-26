@@ -19,14 +19,19 @@ that cost an evening each, and none of them are in any tutorial.
    ⚠️ An ffmpeg-to-ffmpeg check CANNOT SEE THIS. The bridge output is correct;
    it is the CONSUMER's decode that differs. Pin the format.
 
-🔑 2. THE SUBSTREAM GOES ON THE CPU, NOT THE GPU.
-   Consumer GeForce drivers have historically capped concurrent NVENC sessions
-   (long at 2-3, later raised). Three cameras x 2 streams = 6 sessions and you
-   fall off a cliff you cannot see coming. A 640x480@15 substream on libx264 is
-   negligible CPU and removes the risk entirely.
-   ⚠️ It is also where the power goes: switching four bridges off saved 6.8 W of
-   GPU and 34 percentage points of CPU - and the CPU part was the x264
-   substreams, not the NVENC main streams.
+🔑 2. NO SUBSTREAM, NO B-FRAMES, NO SLICES (Blue Iris, locked 2026-08-20).
+   * A SUBSTREAM THAT BLUE IRIS CONSUMES POISONS THE MAIN RECORDING: 2-10 video
+     gaps per ~2 min take with the sub in use, zero without it, on a clean wire.
+     The bridge publishes ONE stream. (`--substream-url` still exists for other
+     recorders; do not point Blue Iris at it.)
+   * BLUE IRIS TRIMS B-FRAMES FROM THE OLDEST PART OF THE PRE-ROLL: ~107 ms gaps
+     at 1 Hz in the first ~8 s. `-bf 0` removes them.
+   * BLUE IRIS COUNTS x264 SLICES AS FRAMES. `-tune zerolatency` turns on sliced
+     threads (5 slices per frame); Blue Iris then saw a 15 fps source at 75 fps
+     and threw away audio to "fix" sync (a 265 ms hole every 2.3 s). Every x264
+     stream here gets `-x264-params sliced-threads=0`.
+   ⚠️ Power: four NVENC bridges + their old x264 substreams cost 6.8 W of GPU and
+   34 percentage points of CPU; most of the CPU was the substreams.
 
 🔑 3. TRY THE MJPEG PIN BEFORE THE H.264 PIN.
    Many UVC cameras advertise a native h264 pin that delivers ZERO frames on
@@ -98,8 +103,15 @@ def video_command(
     pix_fmt: str = "yuvj420p",
     input_codec: str = "mjpeg",
     substream_url: str = "",
+    hold_fps: bool = False,
 ) -> list[str]:
-    """The main stream, and optionally a low-res substream for the live grid."""
+    """One main stream, built the way the reference rig's bridges are locked.
+
+    With ``encoder="h264_nvenc"`` this reproduces ``contrib/windows/bridge/run_cam1.cmd``
+    (the last-known-good bridge, 2026-08-20): CBR at the given bitrate, low-latency
+    tune, one keyframe per second, no B-frames. The libx264 fallback keeps the same
+    rules with x264 spellings, plus the slice fix.
+    """
     ffmpeg = find_ffmpeg() or "ffmpeg"
     fmt = input_format()
 
@@ -107,8 +119,16 @@ def video_command(
     if fmt == "dshow":
         if input_codec:
             cmd += ["-vcodec", input_codec]          # 🔑 finding 3
-        cmd += ["-video_size", f"{width}x{height}", "-framerate", str(fps),
-                "-audio_buffer_size", "80"]
+        cmd += ["-video_size", f"{width}x{height}", "-framerate", str(fps)]
+        if audio_device:
+            # dshow can drop audio chunks while its timestamps stay continuous, so a
+            # camera's audio slid against the voice track in 200 ms steps. A deep
+            # buffer + wall-clock stamps + async resample turn a lost chunk into a
+            # short silence in the right place instead of a permanent shift.
+            cmd += ["-rtbufsize", "256M", "-audio_buffer_size", "500"]
+        # Wall-clock stamps also fix a camera whose clock runs fast (one declared
+        # 30 fps and delivered 32.3); for that camera add hold_fps (`-vf fps=N`).
+        cmd += ["-use_wallclock_as_timestamps", "1"]
         source = f"video={device}"
         if audio_device:
             source += f":audio={audio_device}"
@@ -118,15 +138,21 @@ def video_command(
 
     cmd += ["-map", "0:v"]
     if audio_device:
-        cmd += ["-map", "0:a"]
+        cmd += ["-map", "0:a", "-af", "aresample=async=1000:first_pts=0"]
 
+    if hold_fps:
+        cmd += ["-vf", f"fps={fps}"]                 # only for a fast-clock camera
     cmd += ["-pix_fmt", pix_fmt]                     # 🔑 finding 1 - never omit
     cmd += ["-c:v", encoder]
     if encoder.endswith("nvenc"):
-        cmd += ["-preset", "p4"]
+        cmd += ["-preset", "p4", "-tune", "ll", "-rc", "cbr",
+                "-b:v", bitrate, "-maxrate", bitrate, "-bufsize", bitrate,
+                "-g", str(fps), "-bf", "0", "-delay", "0"]          # 🔑 finding 2
     else:
-        cmd += ["-preset", "veryfast", "-tune", "zerolatency"]
-    cmd += ["-b:v", bitrate, "-maxrate", bitrate, "-bufsize", "16M", "-g", str(fps)]
+        cmd += ["-preset", "veryfast", "-tune", "zerolatency",
+                "-x264-params", "sliced-threads=0",                # 🔑 finding 2
+                "-b:v", bitrate, "-maxrate", bitrate, "-bufsize", bitrate,
+                "-g", str(fps), "-bf", "0"]
 
     if audio_device:
         cmd += ["-c:a", "aac", "-b:a", "128k", "-ar", "48000", "-ac", "1"]
@@ -134,11 +160,14 @@ def video_command(
     cmd += ["-f", "rtsp", "-rtsp_transport", "tcp", url]
 
     if substream_url:
-        # 🔑 finding 2 - always libx264 here, whatever the main stream uses.
+        # 🔴 NOT for Blue Iris - see finding 2. Kept for recorders that need a
+        # separate grid stream. libx264 so it never costs an NVENC session, and
+        # unsliced for the same reason as everything else.
         cmd += ["-map", "0:v", "-an",
                 "-vf", "scale=640:480,fps=15",
                 "-pix_fmt", "yuv420p",
                 "-c:v", "libx264", "-preset", "veryfast", "-tune", "zerolatency",
+                "-x264-params", "sliced-threads=0",
                 "-b:v", "512k", "-maxrate", "768k", "-bufsize", "1M", "-g", "15",
                 "-f", "rtsp", "-rtsp_transport", "tcp", substream_url]
     return cmd
@@ -175,10 +204,15 @@ def audio_command(audio_device: str, url: str, *, bitrate: str = "192k") -> list
     )
     return [
         ffmpeg, "-hide_banner", "-y",
-        "-f", fmt, "-audio_buffer_size", "80", "-i", source,
+        "-f", fmt, "-audio_buffer_size", "80",
+        *(["-sample_rate", "48000"] if fmt == "dshow" else []),
+        "-i", source,
         "-filter_complex", graph,
         "-map", "[v]", "-map", "[aenc]",
+        # 🔴 -threads 1 + sliced-threads=0 are load-bearing: see finding 2. This is
+        # the stream where Blue Iris counting slices as frames cost 11% of the voice.
         "-c:v", "libx264", "-preset", "veryfast", "-tune", "zerolatency",
+        "-threads", "1", "-x264-params", "sliced-threads=0",
         "-b:v", "400k", "-maxrate", "600k", "-bufsize", "1M", "-g", "15",
         # 🔑 -ac 1 is lossless when the device presents duplicated mono, which
         # USB adapters routinely do (both channels identical, same instant).
@@ -216,7 +250,8 @@ def main(args) -> int:
                          width=args.width, height=args.height, fps=args.fps,
                          bitrate=args.bitrate, encoder=args.encoder,
                          pix_fmt=args.pix_fmt, input_codec=args.input_codec,
-                         substream_url=args.substream_url))
+                         substream_url=args.substream_url,
+                         hold_fps=args.hold_fps))
 
     if args.dry_run:
         print(render(cmd))

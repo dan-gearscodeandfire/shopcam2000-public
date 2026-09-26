@@ -51,7 +51,7 @@ $ObservedRepeatSeconds = 600
 # DESIRED STATE: which bridges are wanted at all.
 #
 # Four ffmpeg encoders running 24/7 cost real electricity - 4 NVENC sessions
-# plus 4 libx264 substreams - and most of the time nobody is filming. So the
+# (plus, until 2026-08-19, 4 libx264 substreams) - and most of the time nobody is filming. So the
 # Controller can ask for a bridge to be off, and it does that by writing a file
 # rather than by killing processes: a killed process is exactly what this
 # supervisor exists to undo, and it would have been back inside 30 s with a
@@ -127,7 +127,7 @@ $Components = @(
         # MIC1 is the lav mic, and it is the user's A-ROLL AUDIO - the voice track.
         #
         # NO Toggle, DELIBERATELY. Every other bridge here can be switched off because
-        # four NVENC sessions plus four x264 substreams cost 6.8 W GPU and 34pp CPU. MIC1
+        # four NVENC sessions plus four x264 substreams (since removed) cost 6.8 W GPU and 34pp CPU. MIC1
         # is one AAC stream and a 640x360 waveform, which is a rounding error against
         # that, and the failure switching it off would buy is the worst one on the rig: a
         # moment happens, nine angles catch it, and there is no voice on any of them.

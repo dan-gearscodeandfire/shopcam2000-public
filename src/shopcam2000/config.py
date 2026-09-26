@@ -115,8 +115,9 @@ class RecordingConfig:
 class BridgesConfig:
     """The ffmpeg encoders the Controller may switch off. See bridges.py.
 
-    Four NVENC sessions and four x264 substreams run 24/7 whether or not anyone
-    is filming, and that is a power bill. The Controller does not kill them - it
+    Four NVENC encoders run 24/7 whether or not anyone is filming, and that is a
+    power bill (6.8 W of GPU and 34 points of CPU, measured when each also ran an
+    x264 substream; the substreams were removed 2026-08-19). The Controller does not kill them - it
     writes ``state_path`` and the supervisor starts and stops them to match.
 
     Two ways they go off: a human taps the switch, or ``idle_off_minutes``

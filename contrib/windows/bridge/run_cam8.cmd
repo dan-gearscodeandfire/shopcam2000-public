@@ -18,6 +18,8 @@ rem Shopcam 2000 bridge - CAM8 (generic "USB Camera" / H264 USB Camera bench cam
 rem   MAIN  -> rtsp://127.0.0.1:8554/cam8      1080p30 H.264 8 Mbps CBR, GOP 30, +AAC
 rem   SUB   -> DISABLED 2026-08-19: BI consuming a bridge substream caused recording frame loss
 rem
+rem HISTORY: the substream described in the next blocks was REMOVED on 2026-08-19 (see SUB
+rem above). Blue Iris now decodes the main stream for its grid. Kept for the findings.
 rem WHY A SUBSTREAM: Blue Iris had no low-res stream for these bridged cameras, so its
 rem live grid was decoding the full 1080p main stream and updating roughly once every
 rem 10 s. IP cams already ship a 640x480/15 substream (CAM4/CAM7 confirmed) - this

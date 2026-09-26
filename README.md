@@ -123,8 +123,10 @@ were *measured* rather than guessed, usually after losing something.
 
 | Doc | The finding |
 |---|---|
-| [usb-to-h264.md](docs/usb-to-h264.md) | `-pix_fmt` is load-bearing, and an ffmpeg-to-ffmpeg test **cannot see** the bug it causes |
-| [audio.md](docs/audio.md) | A mic can be its own camera. Low gain is *correct*. A −91 dB floor is a squelch, not a clean preamp |
+| [usb-to-h264.md](docs/usb-to-h264.md) | `-pix_fmt` is load-bearing, and an ffmpeg-to-ffmpeg test **cannot see** the bug it causes. No substream, no B-frames, no x264 slices |
+| [audio.md](docs/audio.md) | A mic can be its own camera. Judge gain against *your* chain. A −91 dB floor is a gate, not a clean preamp |
+| [blue-iris-settings.md](docs/blue-iris-settings.md) | `movieroll`, not `rectime`, is the pre-roll. The locked recording config and the measurement behind each setting |
+| [blue-iris-api.md](docs/blue-iris-api.md) | The JSON API as the Controller uses it, and the calls that return success and do nothing |
 | [preroll.md](docs/preroll.md) | Pre-roll is a buffer that refills in real time, not a setting |
 | [sync.md](docs/sync.md) | Independent sources land ~0.44 s apart, consistently. That is a constraint, not a bug |
 | [calibration.md](docs/calibration.md) | A white-balance temperature knob is a **two-axis** actuator |

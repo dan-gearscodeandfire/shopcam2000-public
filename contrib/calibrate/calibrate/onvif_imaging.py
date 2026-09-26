@@ -1,8 +1,11 @@
 """Minimal ONVIF Imaging client (WS-Security UsernameToken digest).
 
-The driver of last resort for cameras whose CGI imaging writes are stubs —
-CAM4's 2017 Amcrest firmware accepts configManager WB gain writes and silently
-drops them; its ONVIF service is the path that actually reaches the ISP.
+The driver for cameras whose only control plane is ONVIF (CAM2, the ASH21).
+
+⚠️ CORRECTED 2026-09-26: this used to say CAM4's 2017 Amcrest firmware drops
+configManager WB gain writes. It does not. Those writes were going to profile
+[0][0] while the camera ran profile [0][2]; written to the active profile (all
+three, in practice) they land: CAM4 R/G 1.059 -> 0.989 on 2026-08-01.
 Also serves CAM3 (the XiongMai), which was pinned via ONVIF on :8899.
 
     python -m calibrate.onvif_imaging HOST PORT get

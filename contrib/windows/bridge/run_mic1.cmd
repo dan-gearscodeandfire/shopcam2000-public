@@ -39,7 +39,7 @@ rem   quiet" read as a flat line on a lit tile instead. Measured, not assumed.
 rem
 rem WHY IT IS NOT IN THE ENCODER TOGGLE
 rem   DELIBERATE. The four camera encoders default OFF because four NVENC sessions plus
-rem   four x264 substreams cost 6.8 W GPU and 34pp CPU. This is one AAC stream and a
+rem   (at the time) four x264 substreams cost 6.8 W GPU and 34pp CPU. This is one AAC stream and a
 rem   640x360 waveform - a rounding error against that. And the failure it would buy is
 rem   the worst one available: a moment happens, nine angles catch it, and there is no
 rem   voice. "On is implied, off is only ever explicit" does not save us here, because
@@ -70,8 +70,11 @@ rem   192k rather than the cameras' 128k: this is the primary voice track, and t
 rem   is free next to any camera.
 rem   LEVELS: mutter peak -23.2, conversational -15.4, full shout -11.6 dBFS, ZERO samples
 rem   at full scale. Mutter-to-shout spans only 10.5 dB where a voice spans 30-40, so the
-rem   RECEIVER IS COMPRESSING (AGC or limiter). Nothing clips, but the loud reactions this
-rem   channel lives on are being flattened. Unresolved - see the vault note.
+rem   receiver LOOKED like it was compressing. RETRACTED 2026-08-06: re-measured with the
+rem   transmitter at the speaker, the chain is LINEAR over 35 dB (slope 0.966), clipping only
+rem   at ~-8 dBFS, a level no voice reaches at lav distance. The narrow span is the delivery.
+rem   No working gain control exists (Windows capture level is inert) and none is needed.
+rem   Do NOT turn the transmitter gain up: it spends the only ~3.5 dB of headroom.
 rem   GATE: still gates hard to TRUE DIGITAL SILENCE (100% of the tail after he stopped,
 rem   peak -78 dBFS), so MIC1 delivers NO ROOM TONE and will cut audibly against camera
 rem   audio that has some. It does NOT eat quiet speech though - a 22 s muttered aside came

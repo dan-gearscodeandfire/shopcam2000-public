@@ -28,6 +28,8 @@ rem   Measured 2026-07-30: the C-Media input CAN be opened twice concurrently, s
 rem   rebind is about editorial ownership, not device contention.
 rem   Sibling levels, same room, same minute: OBSBOT Tiny mic -54.7 dB mean / -18.6 peak.
 rem
+rem HISTORY: the substream this note describes was REMOVED on 2026-08-19 (see SUB above).
+rem Kept because the finding still holds for any recorder that needs one.
 rem Substream is libx264 (CPU) not NVENC - see run_cam1.cmd for why.
 rem MJPEG pin only - the native h264 pin delivers zero frames on this rig.
 rem AUDIO TIMING (2026-09-09): CAM audio was drifting vs MIC1 in discrete 200 ms steps - dshow

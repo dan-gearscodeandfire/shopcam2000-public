@@ -14,7 +14,7 @@ A recorder that thinks in cameras will happily accept a "camera" that is really 
 microphone. One ffmpeg process, one RTSP URL, one entry in the recorder:
 
 ```
-shopcam encode --audio-only --device "Microphone (USB Audio Device)" \
+shopcam encode --audio-only --device "Microphone (Your Receiver)" \
                --url rtsp://127.0.0.1:8554/mic1 --dry-run
 ```
 
@@ -50,51 +50,82 @@ So draw a **grid and a centre line** underneath the trace. Now:
 
 It costs nothing, it is readable from across the room, and it is usable B-roll.
 
-## 3. 🔑 Low gain is correct. Do not "fix" it.
+### 🔴 And make its x264 stream unsliced
 
-The single most common mistake: the meters look low, so you turn it up.
+The waveform is encoded with libx264 at `-tune zerolatency`, which turns on sliced
+threads. **Blue Iris counts slices as frames**: it read the 15 fps microphone
+stream at 75 fps, and to keep A/V "in sync" it discarded audio, a **265 ms hole
+every 2.3 s**, about 11% of the voice track, cutting through the middle of words.
+The bridge itself was clean; only the Blue Iris recording had holes.
+`-threads 1 -x264-params sliced-threads=0` fixes it (`shopcam encode --audio-only`
+includes both). Fix the slicing, not the audio path.
 
-Measured on the reference rig's lav:
+## 3. 🔑 Know your chain before you judge the level
 
-| | |
+What "correct" gain looks like depends entirely on the chain, and the reference
+rig has had two.
+
+**The old chain** was an analogue lav receiver's **headphone output** into a USB
+adapter's **microphone input**, a 30–40 dB mismatch. There, low meters were
+correct and turning them up clipped every loud moment. That rule died with that
+chain; do not carry it to a different one.
+
+**The current chain** is a 2.4 GHz digital wireless lav whose receiver plugs
+straight into USB (it opens natively at 48 kHz). Measured on a labelled take:
+
+| | peak |
 |---|---|
-| moderate speech | **−18 to −25 dBFS** |
-| a shout | **−4 dBFS** |
+| mutter | −23.2 dBFS |
+| conversational | −15.4 dBFS |
+| full shout | −11.6 dBFS, zero samples at full scale |
 
-That is not quiet. That is **correct**, with proper headroom. Add the +10 dB that
-would make the meters look "healthy" and every loud moment clips —
-**unrecoverably**, and the loud moments are the ones you were recording for.
+- **It is linear**, not compressed: slope 0.966 over 35 dB of input. The top of the
+  curve is *clipping* at about −8 dBFS, reached only at a sound level no voice makes
+  at lav distance. The narrow mutter-to-shout span is the speaker, not an AGC.
+  (An earlier "limiter" reading was taken with the transmitter nowhere near the
+  speaker. Measure with the transmitter where it will be worn.)
+- **There is no working gain control, and none is needed.** The receiver was
+  already at minimum, and the Windows capture-level slider is **inert** on this
+  device: the API says OK, the slider moves and reads back −12 dB, and the audio is
+  unchanged. A read-back is a claim; only the recording is evidence.
+- The only real level control is **physical**: lav placement (twice the distance
+  is −6 dB). **Do not turn the transmitter gain up**: it spends the only headroom
+  (~3.5 dB at the loudest shout) and buys nothing, because the noise floor is
+  already 35 dB down.
 
-There is usually a structural reason the level looks low, and it is not a fault:
-a wireless receiver's **headphone output** into a **microphone input** is a
-30–40 dB mismatch. That is *why* the gain must stay low.
-
-## 4. 🔴 A −91 dB noise floor is a squelch, not a clean preamp
-
-This one looks like good news and is not.
+## 4. 🔴 A −91 dB floor is a gate, not a clean preamp
 
 If your "silence" reads around **−91 to −95 dBFS**, that is *true digital
-silence* — mathematically zero. **A real analogue preamp always hisses**, at
-roughly −60 to −75 dBFS. Digital silence means something upstream is gating: a
-squelch or noise-reduction circuit in the receiver, deciding nothing is
-happening and outputting nothing at all.
+silence*. **A real analogue preamp always hisses**, at roughly −60 to −75 dBFS.
+Digital silence means something upstream is gating, nearly always in the
+receiver.
 
-Why it matters: a gate tuned for "no signal" will also eat the **start of quiet
-delivery** — the muttered aside, the thing said under your breath while
-concentrating, which is often the best line in the take.
+A gate can cost you in two different ways, so check both:
 
-**Check for it deliberately:**
+1. **Does it eat quiet speech?** A gate tuned for "no signal" can clip the start of
+   a muttered aside, which is often the best line in the take. On the current
+   receiver it does not: a 22 s muttered aside came back 8% silent and fully
+   intelligible, with an attack of +25 to +40 dB in 30 ms.
+2. **Does it leave room tone?** This one does not: after speech stops it gates to
+   true silence (peak −78 dBFS). So the voice track has **no room tone** and will
+   cut audibly against camera audio that has some. Plan for it in the edit.
 
-1. Record 30 seconds of a silent room. Measure the floor.
-   `ffmpeg -i test.wav -af astats -f null -` and read `RMS level dB`.
-2. −60 to −75 dB → a real preamp. Fine.
-3. Below about −85 dB → something is gating. Find it and turn it off. It is
-   nearly always in the receiver, not the computer.
+**Check yours deliberately:**
 
-Then verify the gate is not eating consonants: speak a hard consonant after
-silence and check the attack. On the reference rig the gate measured **10–30 ms**
-— faster than a consonant, so benign. A slower one will clip the front off every
-sentence and you will blame your delivery.
+1. Record 30 seconds of a silent room: `ffmpeg -i test.wav -af astats -f null -`,
+   and read `RMS level dB`. −60 to −75 dB is a real preamp; below about −85 dB,
+   something is gating.
+2. Speak a hard consonant after silence and look at the attack. Faster than
+   ~30 ms is benign; slower will clip the front of every sentence.
+
+### 🔴 When you change the microphone, name the new device
+
+When the reference rig swapped receivers, the **old USB adapter was still plugged
+in** and still enumerated under its old name with nothing connected to it. A
+bridge using the old name **bound successfully and recorded nothing**, while every
+health check stayed green. Name the device explicitly, and check the recording,
+not the status light. (The new receiver is also an **exclusive** device: unlike the
+old adapter, it cannot be opened twice, so a second capture of it fails.)
 
 ## 5. Mono, but check first
 

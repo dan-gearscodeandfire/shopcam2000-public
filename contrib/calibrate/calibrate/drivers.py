@@ -299,7 +299,8 @@ class DahuaDriver(CameraDriver):
         self._user, self._password = user, password
         self.knobs = {
             "GainRed": Knob("GainRed", lo=0, hi=100, useful_hi=49,
-                            note="saturates ~45-49; the gains renormalise, so "
+                            note="saturates ~45-49 ON CAM7 (CAM4 is linear through 49; the cap is kept "
+                                 "fleet-wide as a safe default); the gains renormalise, so "
                                  "past that it is pure noise. The residual "
                                  "-2.5% red is a firmware ceiling -> edit tint."),
             "GainBlue": Knob("GainBlue", lo=0, hi=100),

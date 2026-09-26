@@ -276,13 +276,15 @@ def build_parser() -> argparse.ArgumentParser:
     e.add_argument("--fps", type=int, default=30)
     e.add_argument("--bitrate", default="8M")
     e.add_argument("--encoder", default="libx264",
-                   help="libx264 (default, works everywhere) or h264_nvenc")
+                   help="libx264 (default, works everywhere) or h264_nvenc (what the reference rig runs)")
     e.add_argument("--pix-fmt", default="yuvj420p",
                    help="LOAD-BEARING. Do not leave to ffmpeg - see docs/usb-to-h264.md")
     e.add_argument("--input-codec", default="mjpeg",
                    help="dshow input pin. mjpeg is the one that works; '' to leave it alone")
     e.add_argument("--substream-url", default="",
-                   help="also publish a 640x480@15 substream here, for the live grid")
+                   help="also publish a 640x480@15 substream. NOT for Blue Iris: a consumed substream costs frames on the main recording")
+    e.add_argument("--hold-fps", action="store_true",
+                   help="force the output to --fps (-vf fps=N): only for a camera whose clock runs fast")
     e.add_argument("--dry-run", action="store_true", help="print the command, do not run it")
     e.set_defaults(func=_cmd_encode)
 
