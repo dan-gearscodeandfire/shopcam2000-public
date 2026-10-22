@@ -3,6 +3,10 @@
 **A multi-camera workshop rig you drive from your phone - and a button that saves
 the moment you forgot to press record on.**
 
+[![Watch the build video on YouTube](https://i.ytimg.com/vi/ouTxNdOFa9Y/maxresdefault.jpg)](https://www.youtube.com/watch?v=ouTxNdOFa9Y)
+
+**Watch the build (10 min):** [9-Camera Workshop Recorder: One ESP32 Button Saves the Past](https://www.youtube.com/watch?v=ouTxNdOFa9Y)
+
 Built for [Gears, Code, and Fire](https://www.youtube.com/@gearscodeandfire).
 This is the code from my shop, extracted: nine cameras and a lav mic in a workshop,
 running every day.
